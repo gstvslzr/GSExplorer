@@ -1,4 +1,4 @@
-# GExplorer 26.7.0
+# GSExplorer+ 26.7.0
 
 Created by **Gus Salazar**. © 2026 Gus Salazar. All rights reserved.
 
@@ -9,19 +9,19 @@ Self-contained `.deb`: ships its own Python 3.12 runtime and Qt 6 (PySide6) unde
 **Privacy/OPSEC:** no telemetry, no auto-update; the network is used only when you use Connect or open a network location. Settings live in
 `~/.config/gexplorer/`. The Qt TUIO touch plugin (the only component that would open a UDP
 socket) is removed from the bundle at build time. QtNetwork stays bundled because Qt Multimedia
-requires it; GExplorer makes no network requests of its own through it.
+requires it; GSExplorer+ makes no network requests of its own through it.
 
 ## Install / remove
 
 ```bash
 sha256sum -c gexplorer_26.7.0_amd64.deb.sha256
 sudo apt install ./gexplorer_26.7.0_amd64.deb      # apt resolves libraries + recommended helpers
-gexplorer                                          # or launch "GExplorer" from the app grid
+gexplorer                                          # or launch "GSExplorer+" from the app grid
 sudo apt remove gexplorer                          # or: sudo apt purge gexplorer
 ```
 
 It does **not** become your default file manager. To make it the default for folders:
-`xdg-mime default gexplorer.desktop inode/directory` (undo: `xdg-mime default org.gnome.Nautilus.desktop inode/directory`).
+`xdg-mime default gsexplorer.desktop inode/directory` (undo: `xdg-mime default org.gnome.Nautilus.desktop inode/directory`).
 
 Purge does not delete `~/.config/gexplorer` (Debian Policy forbids packages touching home
 directories). Remove it by hand: `rm -rf ~/.config/gexplorer ~/.cache/gexplorer`.
@@ -101,7 +101,7 @@ When *More options* is folded, the active options are listed next to it, so noth
 - **Preview:** selecting a result shows it in the preview, with the matching line and the hit
   highlighted.
 - **Actions:** Enter opens, **F3** views (← → step through the results), **Delete** moves to the trash,
-  Ctrl+C copies paths. The right-click menu offers Open, View, Show in GExplorer, Open folder in a new
+  Ctrl+C copies paths. The right-click menu offers Open, View, Show in GSExplorer+, Open folder in a new
   tab, Open terminal in the folder, Copy path(s), Copy/Move to the other pane, Compress…, Move to trash.
 - **Search within results** applies new criteria to the current results only (no new folder walk).
   **Export CSV…** and **Copy paths** cover all results or the selection.
@@ -273,7 +273,7 @@ Hard links (same inode) are listed once by default because removing one frees no
   "Identical content" (with the hash) or "name only", whether the names differ, which copy is newer, and which
   side is selected for removal.
 - **F3** opens the viewer on the group's copies; ← → flip between them. The context menu has Open,
-  *Show in GExplorer*, *Keep only this copy* and *Copy path*.
+  *Show in GSExplorer+*, *Keep only this copy* and *Copy path*.
 
 **Selecting.** Tick the boxes, click **☑ Check all but first** to tick every copy except the top one in each group (in the current sort order), or use **Select ▾**:
 - All but the newest
@@ -286,9 +286,9 @@ Hard links (same inode) are listed once by default because removing one frees no
 
 | Button / key | Result |
 |---|---|
-| Move to Trash (Delete) | freedesktop trash; restorable from GExplorer's Trash. Always asks first (count and size) |
+| Move to Trash (Delete) | freedesktop trash; restorable from GSExplorer+'s Trash. Always asks first (count and size) |
 | Delete permanently… (Shift+Delete) | asks for confirmation; can't be undone |
-| Move to folder (audit)… | moves copies into `<chosen folder>/GExplorer-duplicates-YYYYMMDD-HHMMSS/<full original path>`, plus `manifest.csv` |
+| Move to folder (audit)… | moves copies into `<chosen folder>/GSExplorer-duplicates-YYYYMMDD-HHMMSS/<full original path>`, plus `manifest.csv` |
 | Undo an audit move… | pick a `manifest.csv`; files go back to their original paths (existing files are never overwritten) |
 | Export list… | CSV of every group and copy, with a *selected* column |
 
@@ -299,7 +299,7 @@ group, kept_copy.
 - Before acting on a file, its size and modification time are re-checked against the scan; if either
   changed, it is skipped.
 - At least one unchanged, unselected copy must remain in its group. If every copy of a group is ticked,
-  GExplorer asks to keep the newest. The engine also refuses on its own, independent of the window.
+  GSExplorer+ asks to keep the newest. The engine also refuses on its own, independent of the window.
 - Moves across file systems copy the file, verify the size and BLAKE2b hash, and only then delete the
   original.
 - Everything runs locally; nothing is uploaded.
@@ -321,7 +321,7 @@ The F3 viewer steps through the files of the current folder, in the pane's sort 
 | Next file | **▶** button, → , N, Space |
 | Previous file | **◀** button, ← , P, Backspace |
 | Scroll text/hex | ↑ ↓ PgUp PgDn Home End |
-| Play media in GExplorer Player | Enter (or the button shown for video/audio) |
+| Play media in GSExplorer+ Player | Enter (or the button shown for video/audio) |
 | Close | Esc, F3, Q |
 
 - A counter shows the position ("3 of 12"); folders and `..` are skipped; it wraps from last to first and back.
@@ -329,10 +329,10 @@ The F3 viewer steps through the files of the current folder, in the pane's sort 
 - Pipes and other special files show a notice instead of being opened, so stepping past them can't hang the viewer.
 - Large images are scaled to the window (decoded at most 2400 px, EXIF rotation applied).
 
-## GExplorer Player (26.3.0)
+## GSExplorer+ Player (26.3.0)
 
 Double-click (or Enter on) any video or audio file to open the built-in player; also right-click >
-**Play in GExplorer Player**, **Play all media in this folder**, Tools > **Media player** (Ctrl+Shift+P),
+**Play in GSExplorer+ Player**, **Play all media in this folder**, Tools > **Media player** (Ctrl+Shift+P),
 or **Open in Player** from the preview panel (continues from the same position).
 Preferences > *Open video/audio with* can switch back to the system app or VLC.
 
@@ -439,7 +439,7 @@ pane folders straight away (active pane = source).
   — Hourly/Daily/Weekly/Monthly or any `OnCalendar` expression, validated live with
   `systemd-analyze`; "run missed jobs" = `Persistent=true`. Timers only fire while you're logged in
   unless you enable linger (button in the dialog). Errors trigger a desktop notification.
-  Remove schedules (Schedule… > Remove) **before** uninstalling GExplorer.
+  Remove schedules (Schedule… > Remove) **before** uninstalling GSExplorer+.
 
 ## Build from source
 
@@ -460,7 +460,7 @@ QT_QPA_PLATFORM=offscreen python tests/test_ui.py     # end-to-end UI flows, thr
 python tests/test_sync.py                             # sync engine: every mode + safety rule
 QT_QPA_PLATFORM=offscreen python tests/test_sync_ui.py # sync window end to end
 QT_QPA_PLATFORM=offscreen python tests/test_preview.py  # thumbnails + preview panel
-QT_QPA_PLATFORM=offscreen python tests/test_player.py   # GExplorer Player (needs ffmpeg)
+QT_QPA_PLATFORM=offscreen python tests/test_player.py   # GSExplorer+ Player (needs ffmpeg)
 QT_QPA_PLATFORM=offscreen python tests/test_connect.py  # Connect (live parts need GX_LIVE=1)
 QT_QPA_PLATFORM=offscreen python tests/test_connect_ui.py
 QT_QPA_PLATFORM=offscreen python tests/test_viewer.py   # F3 viewer previous/next

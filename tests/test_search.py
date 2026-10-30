@@ -12,7 +12,7 @@ import zipfile
 H = tempfile.mkdtemp(prefix="gx-search-")
 os.environ.update(HOME=H)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from gexplorer import search as se  # noqa: E402
+from gsexplorer import search as se  # noqa: E402
 
 results = []
 

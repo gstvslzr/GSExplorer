@@ -13,11 +13,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from PySide6.QtWidgets import QApplication, QInputDialog, QMessageBox  # noqa: E402
 
 app = QApplication([])
-from gexplorer import syncengine as se  # noqa: E402
-from gexplorer import themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
-from gexplorer import syncui  # noqa: E402
+from gsexplorer import syncengine as se  # noqa: E402
+from gsexplorer import themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import syncui  # noqa: E402
 
 _popups = []
 _orig_init = syncui.ScanProgressDialog.__init__

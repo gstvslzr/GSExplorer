@@ -16,9 +16,9 @@ from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QPlainTextEdit  # noqa: E402
 
 app = QApplication([])
-from gexplorer import dialogs, themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import dialogs, themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 results = []
 

@@ -1,4 +1,4 @@
-"""Core tests for GExplorer: trash spec, file-operation queue, model scanning.
+"""Core tests for GSExplorer+: trash spec, file-operation queue, model scanning.
 
 Run:  HOME=$(mktemp -d) QT_QPA_PLATFORM=offscreen python -m pytest -q tests/
 (Or plain:  python tests/test_core.py)
@@ -16,8 +16,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtCore import QCoreApplication, Qt  # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from gexplorer import fsutil  # noqa: E402
-from gexplorer.fileops import OVERWRITE, RENAME, SKIP, JobManager  # noqa: E402
+from gsexplorer import fsutil  # noqa: E402
+from gsexplorer.fileops import OVERWRITE, RENAME, SKIP, JobManager  # noqa: E402
 
 app = QApplication.instance() or QApplication([])
 
@@ -213,8 +213,8 @@ def test_display_name_never_raises():
 
 
 def test_model_scans_100k_without_blocking():
-    from gexplorer.dirmodel import DirModel
-    from gexplorer.icons import IconCache
+    from gsexplorer.dirmodel import DirModel
+    from gsexplorer.icons import IconCache
     with tempfile.TemporaryDirectory() as d:
         for i in range(100_000):
             os.close(os.open(os.path.join(d, f"f{i:06d}.txt"), os.O_CREAT | os.O_WRONLY, 0o644))

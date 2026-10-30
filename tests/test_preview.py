@@ -22,11 +22,11 @@ from PySide6.QtGui import QColor, QFont, QImage, QPageSize, QPainter, QPdfWriter
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
 app = QApplication([])
-from gexplorer import preview as pv  # noqa: E402
-from gexplorer import thumbs as th  # noqa: E402
-from gexplorer import themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import preview as pv  # noqa: E402
+from gsexplorer import thumbs as th  # noqa: E402
+from gsexplorer import themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 results = []
 

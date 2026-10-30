@@ -1,7 +1,7 @@
-"""PyInstaller entry point for GExplorer."""
+"""PyInstaller entry point for GSExplorer+."""
 import sys
 
-from gexplorer.main import main
+from gsexplorer.main import main
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -22,9 +22,9 @@ from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QInputDialog, QMessageBox  # noqa: E402
 
 app = QApplication([])
-from gexplorer import dialogs, fileops, fsutil, themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import dialogs, fileops, fsutil, themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 # ---------------------------------------------------------------- fixtures
 H = TMP
@@ -258,7 +258,7 @@ check("auto-refresh shows new file", "external-new.txt" in [e.name for e in L.mo
 check("selection kept across auto-refresh", before == after == {"b.bin", "Sub"})
 
 # 16. themes switch without error, user theme loads
-with open(os.path.join(os.environ["XDG_CONFIG_HOME"], "gexplorer", "themes", "mine.json"), "w") as f:
+with open(os.path.join(os.environ["XDG_CONFIG_HOME"], "gsexplorer-plus", "themes", "mine.json"), "w") as f:
     f.write('{"name": "Mine", "base": "dark", "colors": {"accent": "#ff8800", "bogus": "x"}}')
 win._fill_theme_menu()
 check("user theme discovered", "Mine" in win.themes)

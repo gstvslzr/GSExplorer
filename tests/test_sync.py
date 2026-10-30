@@ -12,7 +12,7 @@ from contextlib import redirect_stdout
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from gexplorer import syncengine as se  # noqa: E402
+from gsexplorer import syncengine as se  # noqa: E402
 
 
 def _home():

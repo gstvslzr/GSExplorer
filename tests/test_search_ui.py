@@ -18,10 +18,10 @@ from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QInputDialog, QMenu, QMessageBox  # noqa: E402
 
 app = QApplication([])
-from gexplorer import searchui as su  # noqa: E402
-from gexplorer import themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import searchui as su  # noqa: E402
+from gsexplorer import themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 results = []
 
@@ -96,7 +96,7 @@ win.a_search.trigger()
 sw = win._search_win
 pump(0.3)
 check("window opens on the active pane's folder", sw.isVisible() and sw.f_where.text() == D
-      and sw.windowTitle() == "Find Files — GExplorer")
+      and sw.windowTitle() == "Find Files — GSExplorer+")
 
 # ---------------------------------------------------------------- name search via Enter
 sw.f_name.setEditText("invoice")
@@ -193,12 +193,12 @@ sw.view.selectRow(0)
 pos = sw.view.visualRect(sw.model.index(0, 0)).center()
 sw._context_menu(pos)
 check("context menu: open, view, show, tab, terminal, copy, move, compress, trash",
-      {"Open", "View (F3)", "Show in GExplorer", "Open folder in a new tab", "Open terminal in the folder",
+      {"Open", "View (F3)", "Show in GSExplorer+", "Open folder in a new tab", "Open terminal in the folder",
        "Copy path", "Copy to other pane…", "Move to other pane…", "Compress…", "Move to trash"} <= set(menus[-1]))
 sw.show_in_pane(sw.model.hit(0))
 pump(0.5)
 cv = win.active_view()
-check("Show in GExplorer: navigates and selects", cv.path == os.path.join(D, "Notes")
+check("Show in GSExplorer+: navigates and selects", cv.path == os.path.join(D, "Notes")
       and cv.current_entry() is not None and cv.current_entry().name == "todo.txt")
 sw.copy_paths([sw.model.hit(0)])
 check("copy path", QApplication.clipboard().text() == os.path.join(D, "Notes", "todo.txt"))
@@ -278,7 +278,7 @@ class RecMenu2(QMenu):
         recorded.append([x.text() for x in self.actions() if not x.isSeparator()])
 
 
-import gexplorer.mainwindow as mw  # noqa: E402
+import gsexplorer.mainwindow as mw  # noqa: E402
 mw.QMenu = RecMenu2
 lv = win.left.current()
 win.show_context_menu(lv, lv.mapToGlobal(lv.rect().center()), False)

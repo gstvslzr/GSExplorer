@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: GExplorer
-Comment: Personal-use build. GExplorer bundles a private Python runtime and
+Upstream-Name: GSExplorer+
+Comment: Personal-use build. GSExplorer+ bundles a private Python runtime and
  Qt for Python under /opt/gexplorer so it does not depend on the system Python.
 
 Files: /opt/gexplorer/_internal/gexplorer/* /usr/bin/gexplorer

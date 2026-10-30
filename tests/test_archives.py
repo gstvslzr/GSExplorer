@@ -14,7 +14,7 @@ import zipfile
 
 H = tempfile.mkdtemp(prefix="gx-arch-")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from gexplorer import archives as ar  # noqa: E402
+from gsexplorer import archives as ar  # noqa: E402
 
 results = []
 
@@ -73,8 +73,8 @@ for fid, label, ext, need in ar.available_formats():
     check(f"{fid}: progress reported", prog and prog[-1][0] > 0)
     um = os.umask(0); os.umask(um)
     check(f"{fid}: archive gets normal permissions (umask), not 0600", stat.S_IMODE(os.stat(arc).st_mode) == 0o666 & ~um)
-    check(f"{fid}: no temp files left", not [n for n in os.listdir(out) if n.startswith(".gexplorer")]
-          and not [n for n in os.listdir(dest) if n.startswith(".gexplorer")])
+    check(f"{fid}: no temp files left", not [n for n in os.listdir(out) if n.startswith(".gsexplorer-plus")]
+          and not [n for n in os.listdir(dest) if n.startswith(".gsexplorer-plus")])
 
 # smart mode with a single top-level folder, and name clashes
 arc = os.path.join(H, "one.zip")
@@ -187,7 +187,7 @@ try:
 except ar.Cancelled:
     c1 = True
 check("cancel while compressing: no archive and no temp file left", c1 and not os.path.exists(os.path.join(H, "cancel.zip"))
-      and not [n for n in os.listdir(H) if n.startswith(".gexplorer")])
+      and not [n for n in os.listdir(H) if n.startswith(".gsexplorer-plus")])
 ar.compress([big], os.path.join(H, "big.tar.gz"), "tar.gz")
 calls[0] = 0
 try:

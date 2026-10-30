@@ -15,10 +15,10 @@ os.environ.update(XDG_CONFIG_HOME=f"{H}/.config", XDG_DATA_HOME=f"{H}/.local/sha
 from PySide6.QtWidgets import QApplication, QInputDialog, QMessageBox  # noqa: E402
 
 app = QApplication([])
-from gexplorer import connect as cn, themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.connectui import ConnectDialog  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import connect as cn, themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.connectui import ConnectDialog  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 PW = os.environ.get("GX_PW", "Secr3t!pw")
 asked = []

@@ -21,9 +21,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from PySide6.QtWidgets import QApplication, QInputDialog, QMenu  # noqa: E402
 
 app = QApplication([])
-from gexplorer import archives, dialogs, system, themes  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import archives, dialogs, system, themes  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 results = []
 
@@ -107,7 +107,7 @@ win.set_active(win.left)
 opened = []
 system.open_terminal = lambda folder, custom="": opened.append(folder)
 menus = []
-import gexplorer.mainwindow as _mw  # noqa: E402
+import gsexplorer.mainwindow as _mw  # noqa: E402
 
 
 class _RecMenu(QMenu):
@@ -212,7 +212,7 @@ if archives.tool("7z"):
     ok = wait(lambda: os.path.exists(os.path.join(W, "secret", "notes.txt")) and not win.jobs.active(), 30)
     check("encrypted zip: asks, wrong password -> asked again, right one extracts", ok and len(asked) == 2
           and asked[1].startswith("Wrong password") and open(os.path.join(W, "secret", "notes.txt")).read() == "notes")
-    check("failed attempt left nothing behind", not [n for n in os.listdir(W) if n.startswith(".gexplorer")])
+    check("failed attempt left nothing behind", not [n for n in os.listdir(W) if n.startswith(".gsexplorer-plus")])
 else:
     print("SKIP password flow: 7-Zip not installed")
 

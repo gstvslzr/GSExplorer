@@ -1,5 +1,5 @@
 #!/bin/sh
-# GExplorer 26.3.0 postinst — refresh desktop/icon caches. Never changes the
+# GSExplorer+ 26.3.0 postinst — refresh desktop/icon caches. Never changes the
 # system default file manager (that stays the user's choice).
 set -e
 

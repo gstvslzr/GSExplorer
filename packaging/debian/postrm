@@ -1,5 +1,5 @@
 #!/bin/sh
-# GExplorer 26.3.0 postrm — refresh caches after removal.
+# GSExplorer+ 26.3.0 postrm — refresh caches after removal.
 # Per Debian Policy, user files (~/.config/gexplorer) are never touched, even on purge.
 set -e
 

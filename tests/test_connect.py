@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 H = tempfile.mkdtemp(prefix="gx-conn-")
 os.environ.setdefault("XDG_CONFIG_HOME", os.path.join(H, ".config"))
 
-from gexplorer import connect as cn  # noqa: E402
+from gsexplorer import connect as cn  # noqa: E402
 
 results = []
 

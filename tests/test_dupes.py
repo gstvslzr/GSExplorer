@@ -10,7 +10,7 @@ import time
 H = tempfile.mkdtemp(prefix="gx-dupes-")
 os.environ.update(HOME=H, XDG_DATA_HOME=f"{H}/.local/share", XDG_CONFIG_HOME=f"{H}/.config")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from gexplorer import dupes  # noqa: E402
+from gsexplorer import dupes  # noqa: E402
 
 results = []
 

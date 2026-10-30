@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prune a PyInstaller onedir bundle and compute Debian Depends from what's left.
 
-Policy (GExplorer 26.0.1):
+Policy (GSExplorer+ 26.0.1):
   * Keep: Python runtime, PySide6/Shiboken, Qt 6 libraries, ICU (Qt's private copy).
   * Drop: every *system* library PyInstaller copied from the build host (X11, GTK,
     glib, libstdc++ ...). Those come from Ubuntu packages listed in Depends, so
@@ -32,7 +32,7 @@ DROP_PLUGINS = [
     "networkinformation", "tls", "sqldrivers", "qmltooling", "designer", "egldeviceintegrations",
     "wayland-graphics-integration-server",
 ]
-# libQt6Network stays: Qt Multimedia links it (GExplorer code never uses it).
+# libQt6Network stays: Qt Multimedia links it (GSExplorer+ code never uses it).
 DROP_QT_LIBS = ["libQt6EglFSDeviceIntegration.so.6", "libQt6EglFsKmsSupport.so.6"]
 # Sonames that may be absent on the build host but exist on Ubuntu 24.04.
 KNOWN_PKG = {"libxcb-cursor.so.0": "libxcb-cursor0"}

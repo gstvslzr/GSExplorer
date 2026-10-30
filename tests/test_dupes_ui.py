@@ -17,10 +17,10 @@ from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox  # noqa: E402
 
 app = QApplication([])
-from gexplorer import dupes, themes  # noqa: E402
-from gexplorer import dupesui as du  # noqa: E402
-from gexplorer.config import Config  # noqa: E402
-from gexplorer.mainwindow import MainWindow  # noqa: E402
+from gsexplorer import dupes, themes  # noqa: E402
+from gsexplorer import dupesui as du  # noqa: E402
+from gsexplorer.config import Config  # noqa: E402
+from gsexplorer.mainwindow import MainWindow  # noqa: E402
 
 results = []
 BOXES = []
@@ -153,7 +153,7 @@ win.a_dupes.trigger()
 w = win._dupes_win
 pump(0.3)
 check("window opens with the active pane folder and a title", w.isVisible() and w.folder_list() == [D]
-      and w.windowTitle() == "Find Duplicates — GExplorer")
+      and w.windowTitle() == "Find Duplicates — GSExplorer+")
 check("actions disabled until something is selected", not w.b_trash.isEnabled() and not w.b_delete.isEnabled())
 
 w.b_scan.click()
@@ -474,7 +474,7 @@ out = os.path.join(H, "list.csv")
 QFD.getSaveFileName = staticmethod(lambda *a, **k: (out, ""))
 w.export()
 check("export CSV", os.path.exists(out) and "group,copies,match" in open(out).read())
-from gexplorer import dialogs  # noqa: E402
+from gsexplorer import dialogs  # noqa: E402
 opened = []
 dialogs.ViewerDialog.exec = lambda self: opened.append((self.current(), self.files))
 w.tree.setCurrentIndex((top(0).child(0)).idx)
