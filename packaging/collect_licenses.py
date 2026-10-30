@@ -343,9 +343,129 @@ def scan_python(bundle: Path, out: Path, components: list, warnings: list) -> No
         rel = [f"cpython/{lic_files[0].name}"]
     else:
         warnings.append(f"CPython {ver}: PSF license text not found on the build host; copy it from python.org")
+    inc = Path("/usr/share/doc") / f"libpython{ver}-minimal" / "copyright"
+    if inc.is_file():
+        dest = out / "cpython" / "incorporated-software-copyright"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(inc, dest)
+        rel.append("cpython/incorporated-software-copyright")
     components.append({
         "name": "CPython", "version": ver, "spdx": "PSF-2.0", "homepage": "https://www.python.org",
         "kind": "runtime", "license_files": rel, "source": str(libpy[0].relative_to(bundle)),
+        "notes": "Includes code under other licenses (e.g. libmpdec BSD-2-Clause, HACL* MIT); "
+                 "see incorporated-software-copyright when present.",
+    })
+
+
+# Third-party code compiled *into* Qt or Python binaries (no shared library of its own), found by
+# a signature string. License texts come from the build host's Debian/Ubuntu copyright files for
+# the same upstream project (/usr/share/doc/<pkg>/copyright).
+EMBEDDED = [
+    # name, binary glob, signature regex (group 1 = version, optional), SPDX, homepage, doc packages, note
+    ("libjpeg-turbo", "**/imageformats/libq*.so", rb"libjpeg-turbo version ([0-9.]+)",
+     "IJG AND BSD-3-Clause AND Zlib", "https://libjpeg-turbo.org", ["libjpeg-turbo8"],
+     "Statically linked in Qt's JPEG and TIFF image plugins. "
+     "This software is based in part on the work of the Independent JPEG Group."),
+    ("LibTIFF", "**/imageformats/libqtiff.so", rb"LIBTIFF, Version ([0-9.]+)",
+     "libtiff", "https://libtiff.gitlab.io/libtiff/", ["libtiff6"],
+     "Statically linked in Qt's TIFF image plugin."),
+    ("libwebp", "**/imageformats/libqwebp.so", rb"(WebPDecode)",
+     "BSD-3-Clause", "https://chromium.googlesource.com/webm/libwebp", ["libwebp7"],
+     "Statically linked in Qt's WebP image plugin."),
+    ("libpng", "**/libQt6Gui.so*", rb"libpng version ([0-9.]+)",
+     "Libpng", "http://www.libpng.org/pub/png/libpng.html", ["libpng16-16t64", "libpng16-16"],
+     "Statically linked in Qt GUI."),
+    ("HarfBuzz", "**/libQt6Gui.so*", rb"([Hh]arf[Bb]uzz)",
+     "MIT", "https://harfbuzz.github.io", ["libharfbuzz0b"],
+     "Statically linked in Qt GUI."),
+    ("PCRE2", "**/libQt6Core.so*", rb"(pcre2)",
+     "BSD-3-Clause WITH PCRE2-exception", "https://github.com/PCRE2Project/pcre2", ["libpcre2-16-0"],
+     "Statically linked in Qt Core."),
+    ("Keccak (SHA-3 reference code)", "**/libQt6Core.so*", rb"(Keccak)",
+     "CC0-1.0", "https://keccak.team", [],
+     "Statically linked in Qt Core; released to the public domain (CC0) by its authors."),
+]
+
+
+def _version_or_blank(m: re.Match) -> str:
+    v = m.group(1).decode("ascii", "replace") if m.groups() else ""
+    return v if re.fullmatch(r"[0-9][0-9.]*", v) else ""
+
+
+def scan_embedded(bundle: Path, out: Path, components: list, warnings: list) -> None:
+    for name, glob, sig, spdx, home, docs, note in EMBEDDED:
+        hits, ver = [], ""
+        for p in sorted(bundle.glob(glob)):
+            if not p.is_file() or p.is_symlink():
+                continue
+            m = re.search(sig, p.read_bytes())
+            if m:
+                hits.append(str(p.relative_to(bundle)))
+                ver = ver or _version_or_blank(m)
+        if not hits:
+            continue
+        texts = [Path("/usr/share/doc") / d / "copyright" for d in docs]
+        texts = [t for t in texts if t.is_file()][:1]
+        rel = []
+        if texts:
+            dest = out / _slug(name) / "copyright"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(texts[0], dest)
+            rel = [str(dest.relative_to(out))]
+        elif docs:
+            warnings.append(f"{name}: license text not found on this build host "
+                            f"(install one of: {', '.join(docs)})")
+        components.append({
+            "name": name, "version": ver, "spdx": spdx, "homepage": home, "kind": "embedded",
+            "license_files": rel, "source": ", ".join(hits[:3]),
+            "notes": note + (f" License text from the Ubuntu package {texts[0].parent.name}." if texts else ""),
+        })
+
+
+def scan_icu(bundle: Path, out: Path, components: list, warnings: list) -> None:
+    libs = sorted(p for p in bundle.rglob("libicuuc.so.*") if p.is_file() and not p.is_symlink())
+    if not libs:
+        return
+    m = re.search(r"libicuuc\.so\.(\d+)", libs[0].name)
+    src = next((Path("/usr/share/doc") / d / "copyright" for d in
+                sorted(os.listdir("/usr/share/doc")) if re.fullmatch(r"libicu\d+", d)), None) \
+        if Path("/usr/share/doc").is_dir() else None
+    rel = []
+    if src and src.is_file():
+        dest = out / "icu" / "copyright"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest)
+        rel = ["icu/copyright"]
+    else:
+        warnings.append("ICU: license text not found on this build host (install libicu74)")
+    components.append({
+        "name": "ICU (International Components for Unicode)", "version": m.group(1) if m else "",
+        "spdx": "Unicode-3.0", "homepage": "https://icu.unicode.org", "kind": "native-library",
+        "license_files": rel, "source": str(libs[0].relative_to(bundle)),
+        "notes": "Shared libraries used by Qt Core. Also contains double-conversion (BSD-3-Clause)."
+                 + (f" License text from the Ubuntu package {src.parent.name}." if rel else ""),
+    })
+
+
+def scan_pyinstaller(bundle: Path, out: Path, components: list, warnings: list) -> None:
+    """A PyInstaller onedir bundle carries its bootloader as the main executable."""
+    if not any(bundle.rglob("base_library.zip")):
+        return
+    try:
+        import PyInstaller  # the build venv's copy, i.e. the version that froze this bundle
+        ver = PyInstaller.__version__
+        base = Path(PyInstaller.__file__).resolve().parent
+        lic = sorted(base.parent.glob("pyinstaller-*.dist-info/**/COPYING.txt"))
+    except ImportError:
+        ver, lic = "", []
+    rel = _copy_licenses(lic[:1], out, "PyInstaller bootloader", lic[0].parent) if lic else []
+    if not rel:
+        warnings.append("PyInstaller COPYING.txt not found: run this script with the build venv's python")
+    components.append({
+        "name": "PyInstaller bootloader", "version": ver,
+        "spdx": "GPL-2.0-or-later WITH Bootloader-exception", "homepage": "https://pyinstaller.org",
+        "kind": "bootloader", "license_files": rel, "source": "main executable",
+        "notes": "The exception allows distributing the bundled program under any license.",
     })
 
 
@@ -395,6 +515,9 @@ def main(argv=None) -> int:
     scan_qt(bundle, components, blockers, warnings)
     scan_ffmpeg(bundle, components, blockers, warnings)
     scan_python(bundle, out, components, warnings)
+    scan_pyinstaller(bundle, out, components, warnings)
+    scan_icu(bundle, out, components, warnings)
+    scan_embedded(bundle, out, components, warnings)
     add_standard_texts(out, components, warnings)
     if any(c["name"].lower().startswith(("pyside6", "shiboken6", "qt 6")) for c in components):
         warnings.append("Qt/PySide6: host the matching Qt and PySide6 source on your own server (LGPL source obligation)")

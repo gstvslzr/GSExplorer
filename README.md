@@ -60,6 +60,8 @@ The `gexplorer` command remains as an alias for one transition period.
 | FFmpeg (from the PySide6-Addons wheel, for Qt Multimedia) | LGPL-2.1-or-later | the build verifies the embedded license string |
 | CPython 3.12 runtime | PSF-2.0 | |
 | PyInstaller bootloader | GPL-2.0-or-later with bootloader exception | |
+| ICU 73 (used by Qt Core) | Unicode-3.0 | |
+| Compiled into Qt: libjpeg-turbo, LibTIFF, libwebp (image plugins); libpng, HarfBuzz (Qt GUI); PCRE2, Keccak (Qt Core) | IJG/BSD-3-Clause/Zlib; libtiff; BSD-3-Clause; Libpng; MIT; BSD-3-Clause WITH PCRE2-exception; CC0-1.0 | detected in the binaries at build time; *this software is based in part on the work of the Independent JPEG Group* |
 
 **Help ▸ About GSExplorer+** shows the license, every bundled component with its full license text,
 the LGPL notice and source offer, privacy details and system information. The same inventory is

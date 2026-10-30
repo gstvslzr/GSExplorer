@@ -63,6 +63,7 @@ rm -rf "$BUILD/pyi" "$BUILD/frozen"
     --paths "$ROOT/src" \
     --add-data "$ROOT/src/gsexplorer/resources:gsexplorer/resources" \
     --add-data "$ROOT/LICENSE:." \
+    --copy-metadata PySide6_Essentials --copy-metadata PySide6_Addons --copy-metadata shiboken6 \
     --hidden-import PySide6.QtSvg --hidden-import PySide6.QtMultimedia \
     --hidden-import PySide6.QtMultimediaWidgets \
     --exclude-module tkinter --exclude-module unittest --exclude-module pydoc_data \
@@ -87,7 +88,7 @@ find "$FROZEN" -regextype posix-extended \( -iregex '.*/(lib)?Qt6?(Charts|DataVi
 
 # ---------------------------------------------------------------- 2b. license gate
 log "Collecting third-party licenses (fails on GPL-only Qt modules or a non-LGPL FFmpeg)"
-python3 "$ROOT/packaging/collect_licenses.py" "$FROZEN" --out "$FROZEN/share/licenses" \
+"$VENV/bin/python" "$ROOT/packaging/collect_licenses.py" "$FROZEN" --out "$FROZEN/share/licenses" \
     || die "license gate failed — see BLOCKER lines above"
 printf '{"version": "%s", "commit": "%s", "build_date": "%s"}\n' "$VERSION" \
     "$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" "$(date -u +%Y-%m-%d)" \
@@ -178,8 +179,7 @@ Architecture: $ARCH
 Maintainer: $MAINTAINER
 Installed-Size: $INSTALLED_KB
 Depends: libc6 (>= $GLIBC_MIN), $SYS_DEPENDS
-Recommends: xdg-utils, shared-mime-info, hicolor-icon-theme, pkexec | policykit-1, udisks2,
- gvfs-backends, gvfs-fuse, libsecret-tools, poppler-utils, bubblewrap, ffmpeg
+Recommends: xdg-utils, shared-mime-info, hicolor-icon-theme, pkexec | policykit-1, udisks2, gvfs-backends, gvfs-fuse, libsecret-tools, poppler-utils, bubblewrap, ffmpeg
 Suggests: gnome-terminal | x-terminal-emulator, remmina | freerdp3-x11, vlc, rclone, 7zip, zstd, plocate, poppler-utils
 Replaces: gexplorer (<< 26.8.0)
 Breaks: gexplorer (<< 26.8.0)
@@ -188,11 +188,12 @@ Homepage: https://github.com/gstvslzr/GSExplorer
 Section: utils
 Priority: optional
 Description: Dual-pane, keyboard-first file manager with sync and backup
- GSExplorer+ (formerly GExplorer) is a keyboard-driven, dual-pane file manager for Ubuntu with tabs,
- breadcrumb navigation, a background copy/move/delete queue with pause and
- cancel, freedesktop.org trash, quick filter, F-key bar, command line,
- Open With, properties with permissions editing (pkexec when needed) and
- light, dark, midnight and high-contrast themes plus user JSON themes.
+ GSExplorer+ (formerly GExplorer) is a keyboard-driven, dual-pane file
+ manager for Ubuntu with tabs, breadcrumb navigation, a background
+ copy/move/delete queue with pause and cancel, freedesktop.org trash, quick
+ filter, F-key bar, command line, Open With, properties with permissions
+ editing (pkexec when needed) and light, dark, midnight and high-contrast
+ themes plus user JSON themes.
  .
  Sync & Backup: profiles of folder pairs with mirror, update, two-way
  (with deletion and conflict detection) and hard-linked snapshot backups,

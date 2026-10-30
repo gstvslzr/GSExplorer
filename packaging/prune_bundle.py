@@ -126,10 +126,12 @@ def main() -> int:
         for so in readelf_needed(f):
             if so in bundled or so in LIBC_SONAMES:
                 continue
-            if so in sysl:
+            # Distro directories first: ldconfig may prefer a locally built copy in /usr/local,
+            # which no Debian package owns (Depends must name distro packages).
+            if _find_lib(so):
+                needed_sys.add(_find_lib(so))      # also covers e.g. libbz2.so.1 (a symlink, not a SONAME)
+            elif so in sysl:
                 needed_sys.add(sysl[so])
-            elif _find_lib(so):
-                needed_sys.add(_find_lib(so))      # e.g. libbz2.so.1: a symlink, not a SONAME
             elif so in KNOWN_PKG:
                 pkgs.add(KNOWN_PKG[so])
             else:
