@@ -9,7 +9,7 @@
 #
 # Versions must match packaging/requirements-build.txt and the FFmpeg version reported in
 # dist/licenses/licenses.json. The script stops if any download fails; it never guesses.
-# Size: roughly 1 GB (the Qt "everywhere" archive is most of it).
+# Size: about 450 MB for 6.12.0 / 9.0.1 (the Qt "everywhere" archive is about 423 MB).
 set -euo pipefail
 
 QT_VER="6.12.0"
@@ -35,8 +35,9 @@ for u in "${URLS[@]}"; do
 done
 
 # How the bundled FFmpeg was configured (from the build-time inventory), so the source is usable.
-if [ -f "$ROOT/dist/licenses/licenses.json" ]; then
-  python3 - "$ROOT/dist/licenses/licenses.json" > "$OUT/FFMPEG-BUILD-CONFIGURATION.txt" <<'EOF'
+INV="${LICENSES_JSON:-$ROOT/dist/licenses/licenses.json}"   # override when running outside the source tree
+if [ -f "$INV" ]; then
+  python3 - "$INV" > "$OUT/FFMPEG-BUILD-CONFIGURATION.txt" <<'EOF'
 import json, sys
 for c in json.load(open(sys.argv[1]))["components"]:
     if c["name"].startswith("FFmpeg"):
@@ -59,6 +60,6 @@ ${QT_VER} wheels on PyPI. They are installed as replaceable shared libraries in
 /opt/gsexplorer-plus/_internal/PySide6/.
 EOF
 
-( cd "$OUT" && sha256sum -- * > SHA256SUMS-lgpl-sources )
+( cd "$OUT" && rm -f SHA256SUMS-lgpl-sources && sha256sum -- * > SHA256SUMS-lgpl-sources.tmp && mv SHA256SUMS-lgpl-sources.tmp SHA256SUMS-lgpl-sources )
 echo "Done: $OUT"
 ls -lh "$OUT"
