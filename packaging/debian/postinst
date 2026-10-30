@@ -1,0 +1,17 @@
+#!/bin/sh
+# GExplorer 26.3.0 postinst — refresh desktop/icon caches. Never changes the
+# system default file manager (that stays the user's choice).
+set -e
+
+case "$1" in
+    configure)
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q /usr/share/applications || true
+        fi
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+        fi
+        ;;
+esac
+
+exit 0

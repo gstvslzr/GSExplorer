@@ -1,0 +1,127 @@
+.TH GEXPLORER 1 "October 2026" "GExplorer 26.6.0" "User Commands"
+.SH NAME
+gexplorer \- dual-pane file manager
+.SH SYNOPSIS
+.B gexplorer
+[\fIFOLDER\fR | \fIFILE\fR | \fIfile:///URI\fR]
+.br
+.B gexplorer
+\-\-sync \fIPROFILE\fR [\-\-dry\-run] [\-\-quiet]
+.br
+.B gexplorer
+\-\-list\-profiles
+.br
+.B gexplorer
+\-\-version | \-\-help
+.SH DESCRIPTION
+GExplorer is a keyboard-friendly, dual-pane file manager with tabs, a
+breadcrumb path bar, a background file-operation queue, freedesktop.org trash
+support and themes. When FOLDER is given it opens in a new tab in the left
+pane; when FILE is given its folder opens with the file selected.
+.SH SYNC AND BACKUP
+Tools > Sync & Backup (Ctrl+Shift+B) manages profiles of folder-pair tasks; Ctrl+Shift+S
+compares the two pane folders. Modes: \fBMirror\fR (target becomes an exact copy),
+\fBUpdate\fR (copy new/newer, never delete), \fBTwo-way\fR (propagate changes and deletions
+both ways; conflicts are shown for you to resolve) and \fBSnapshot backup\fR (dated copies;
+unchanged files are hard links to the previous snapshot). Overwritten and deleted files go
+to the trash, a versions folder, or are deleted, per task.
+While Synchronize runs, a progress window shows the percentage done with a turning gear and
+a countdown of the estimated time left, the direction data is moving (left to right, right to
+left, deleting on one side, or into a new snapshot), the operation in progress with its full
+source and destination paths, a bar for the current file, and files, data, speed, elapsed and
+remaining time. Pause, Cancel (files already copied stay; nothing is left half-written) and
+Run in background are available; "Show progress" in the Sync window brings it back.
+.TP
+.B \-\-sync \fIPROFILE\fR
+Run a saved profile without a GUI (used by scheduled runs). Conflicts are skipped.
+Prints a JSON summary. Exit status: 0 success, 1 warnings, 2 errors, 3 cancelled.
+.TP
+.B \-\-dry\-run
+With \-\-sync: show what would happen; change nothing.
+.SH CONNECT
+Connect > Connect to Server (Ctrl+K) mounts SMB, SFTP, FTP/FTPS, WebDAV and NFS shares through
+GVFS (they open as normal folders), opens SSH sessions in your terminal, and starts Remmina or
+FreeRDP for RDP/VNC. OneDrive and Google Drive work through GNOME Online Accounts or rclone.
+Passwords are passed to the mount helper on standard input and, if you choose, stored only in
+the system keyring (libsecret). Unknown SSH host keys must be confirmed; changed keys are refused.
+.SH PREVIEW
+Alt+P toggles the preview panel: images, text, PDF first page, DOCX/PPTX/XLSX/ODF text,
+video and audio playback (or hand-off to VLC). Icon view shows thumbnails from the shared
+freedesktop cache; external thumbnailers run sandboxed with bubblewrap when available.
+.SH PLAYER
+Double-clicking a video or audio file opens GExplorer Player (Preferences can choose the system
+app or VLC instead). It plays the folder as a playlist, with fullscreen, speed 0.5x to 2x, audio and
+subtitle tracks, cover art, repeat/shuffle, and resumes long files where you stopped (positions are
+kept in ~/.local/share/gexplorer/media-positions.json). Keys: Space play/pause, Left/Right 5 s,
+J/L 10 s, Up/Down volume, M mute, F fullscreen, N/P next/previous, [ ] speed.
+.SH FIND FILES
+The magnifying-glass toolbar button, Ctrl+F or Alt+F7 (or right-click a folder > Search in…) opens
+Find Files. Search by name (contains, wildcards such as *.pdf;*.docx, regular expression or exact),
+text inside files (plain or regular expression, whole word, NOT containing; also inside DOCX, XLSX,
+PPTX and ODF documents, and PDFs when pdftotext from poppler-utils is installed), files or folders,
+kind, size, modification date, empty items and names inside .zip/.tar archives, with depth limit,
+hidden files, folders to skip and stay-on-this-drive options. With plocate installed, name searches
+can use the system file index. Results appear while searching and can be sorted, filtered, refined,
+previewed (matching line highlighted), opened, viewed (F3), shown in GExplorer, copied, moved,
+compressed, trashed or exported to CSV. Searches can be saved by name.
+.SH ARCHIVES
+Right-click selected items > \fBCompress…\fR (Alt+F5) creates .zip, .tar.gz, .tar.xz, .tar.bz2 or .tar
+(built in), .tar.zst (needs zstd) or .7z with an optional password (needs 7zip). On an archive,
+\fBExtract here\fR, \fBExtract to "name/"\fR and \fBExtract to…\fR (Alt+F9) unpack it; .7z, .rar and
+.iso need 7zip. Extraction goes through a hidden staging folder, never overwrites existing files, refuses
+absolute and ".." paths and links leading outside the folder, drops setuid bits, and stops before the
+disk fills up.
+.SH TERMINAL
+F12 or "Open terminal here" opens your terminal in the folder shown in the active pane; right-clicking
+a folder offers "Open terminal in <folder>". The folder is passed with the terminal's own option
+(e.g. --working-directory), as the starting folder and as $PWD. A custom terminal command in
+Preferences may contain {dir} for the folder.
+.SH FIND DUPLICATES
+Tools > Find Duplicates (Ctrl+Shift+D), or "Find duplicates in this folder" on a folder's context menu,
+searches one or more folders. \fBIdentical content\fR groups files by size, then a hash of the first and
+last 16 KiB, then a full BLAKE2b-256 hash, so only same-size candidates are read in full. \fBSame name
+and size\fR and \fBSame name only\fR do not compare contents. Hard links are listed once (removing one
+frees no space). Symlinks, pipes and devices are never read; /proc, /sys, /dev and /run are skipped.
+Results are grouped and sortable by wasted space, size, copies, name, location or date; selecting a copy
+previews it next to another copy of the same group. Selected copies can be moved to the trash, deleted, or
+moved into an audit folder (GExplorer-duplicates-DATE) that keeps each file's full original path and a
+manifest.csv (original path, new path, hash, kept copy); "Undo an audit move" restores from it. Every
+action re-checks size and modification time against the scan and always leaves one copy per group.
+.SH KEYS
+F2 rename, F3 view (Left/Right or the arrow buttons step through the folder's files), F4 edit, F5 copy, F6 move, F7 new folder, F8/Delete trash,
+Shift+Delete delete permanently, Tab switch pane, F9 toggle dual pane,
+Ctrl+S quick filter, Ctrl+H hidden files, Ctrl+J operations queue.
+Help > Keyboard shortcuts lists all keys.
+.SH FILES
+.TP
+.I ~/.config/gexplorer/config.json
+Settings, bookmarks and the last session.
+.TP
+.I ~/.config/gexplorer/themes/*.json
+User themes. Files override built-in themes with the same name.
+.TP
+.I ~/.config/gexplorer/sync/*.json
+Sync & Backup profiles.
+.TP
+.I ~/.local/share/gexplorer/sync-logs/
+Run logs (last 100 kept). Two-way state databases live in ../sync-state/.
+.TP
+.I ~/.config/systemd/user/gexplorer-sync-*.timer
+Schedules created by the Schedule dialog (systemd user timers).
+.TP
+.I ~/.config/gexplorer/connections.json
+Saved connections (mode 0600; never contains passwords).
+.TP
+.I ~/.cache/thumbnails/
+Shared freedesktop thumbnail cache.
+.TP
+.I ~/.local/share/Trash
+Home trash (freedesktop.org Trash specification).
+.SH PRIVACY
+No telemetry and no auto-update. GExplorer only uses the network when you connect to a server or
+open a network location.
+.SH AUTHOR
+Created by Gus Salazar.
+.SH NOTES
+Removing the package (even with purge) does not delete ~/.config/gexplorer;
+Debian policy forbids packages from modifying users' home directories.

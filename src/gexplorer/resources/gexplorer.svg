@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- GExplorer app icon: two panes (folder | file list) on a split tile -->
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="#1f4fb3"/>
+  <path d="M64 12 h64 v232 h-64 a52 52 0 0 1 -52 -52 v-128 a52 52 0 0 1 52 -52z" fill="#2f6fde"/>
+  <rect x="124" y="12" width="8" height="232" fill="#173e8f"/>
+  <!-- left pane: folder -->
+  <path d="M36 74 h30 l10 11 h30 a8 8 0 0 1 8 8 v90 a8 8 0 0 1 -8 8 h-70 a8 8 0 0 1 -8 -8 v-101 a8 8 0 0 1 8 -8z"
+        fill="#ffd56b"/>
+  <path d="M28 104 h86 v79 a8 8 0 0 1 -8 8 h-70 a8 8 0 0 1 -8 -8z" fill="#ffc53d"/>
+  <!-- right pane: file list -->
+  <rect x="146" y="70" width="82" height="122" rx="12" fill="#ffffff"/>
+  <rect x="160" y="88" width="54" height="10" rx="5" fill="#2f6fde"/>
+  <rect x="160" y="110" width="44" height="10" rx="5" fill="#c9d6ef"/>
+  <rect x="160" y="132" width="54" height="10" rx="5" fill="#c9d6ef"/>
+  <rect x="160" y="154" width="36" height="10" rx="5" fill="#c9d6ef"/>
+</svg>

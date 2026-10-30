@@ -1,0 +1,41 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: GExplorer
+Comment: Personal-use build. GExplorer bundles a private Python runtime and
+ Qt for Python under /opt/gexplorer so it does not depend on the system Python.
+
+Files: /opt/gexplorer/_internal/gexplorer/* /usr/bin/gexplorer
+Copyright: 2026 Gus Salazar
+License: Proprietary-personal
+ Created by Gus Salazar. All rights reserved. Built for the copyright holder's personal use.
+
+Files: /opt/gexplorer/_internal/PySide6/* /opt/gexplorer/_internal/shiboken6/*
+Copyright: The Qt Company Ltd. and other contributors
+License: LGPL-3.0-only
+ Qt for Python (PySide6, Shiboken6) and the Qt 6 libraries are used under the
+ GNU Lesser General Public License version 3. They are shipped as unmodified,
+ dynamically loaded shared libraries in /opt/gexplorer/_internal and may be
+ replaced by the user with compatible builds.
+ .
+ On Debian systems the full text is in /usr/share/common-licenses/LGPL-3
+ (which incorporates /usr/share/common-licenses/GPL-3).
+
+Files: /opt/gexplorer/_internal/libpython* /opt/gexplorer/_internal/base_library.zip
+ /opt/gexplorer/_internal/lib-dynload/*
+Copyright: Python Software Foundation
+License: PSF-2.0
+ The Python interpreter and standard library are distributed under the Python
+ Software Foundation License Version 2. The full text is included as
+ /usr/share/doc/gexplorer/PYTHON-LICENSE.txt.
+
+Files: /opt/gexplorer/gexplorer
+Copyright: PyInstaller Development Team
+License: GPL-2.0+ with bootloader exception
+ The PyInstaller bootloader is licensed under the GPL version 2 or later with an
+ exception allowing it to be used to build and distribute programs under any
+ license. Full text: /usr/share/doc/gexplorer/PYINSTALLER-COPYING.txt.
+
+Files: /opt/gexplorer/_internal/PySide6/Qt/lib/libav* /opt/gexplorer/_internal/PySide6/Qt/lib/libsw*
+Copyright: FFmpeg developers
+License: LGPL-2.1+
+ FFmpeg libraries as shipped by Qt Multimedia (LGPL build). Full text:
+ /usr/share/common-licenses/LGPL-2.1.
