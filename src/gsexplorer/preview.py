@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Preview side panel (Alt+P): images, text/code, PDF first page, office documents (text +
 thumbnail), video/audio playback (Qt Multimedia, or hand off to VLC), and file details.
 

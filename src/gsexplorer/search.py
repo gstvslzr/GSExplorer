@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Files engine (no Qt; unit-testable).
 
 Walks the chosen folders (or, optionally, asks the system file index — plocate/locate — for names),

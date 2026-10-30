@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Theme engine: built-in themes + user JSON themes in ~/.config/gsexplorer-plus/themes/.
 
 A theme is {"name": str, "base": "light"|"dark", "colors": {key: "#rrggbb"}}.

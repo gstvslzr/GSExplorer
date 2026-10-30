@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Compress / Extract in the context menu + terminal folder, end to end (headless).
 
 Run: QT_QPA_PLATFORM=offscreen python tests/test_archives_ui.py

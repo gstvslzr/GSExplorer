@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """GSExplorer+ Player: built-in video/audio player window (Qt Multimedia + bundled FFmpeg).
 
 Features: playlist from the file's folder, previous/next, auto-advance, repeat (off/all/one),

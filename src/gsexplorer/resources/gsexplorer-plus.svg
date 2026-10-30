@@ -1,3 +1,5 @@
+<!-- SPDX-FileCopyrightText: 2026 Gus Salazar -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
   <!-- GExplorer app icon: two panes (folder | file list) on a split tile -->
   <rect x="12" y="12" width="232" height="232" rx="52" fill="#1f4fb3"/>

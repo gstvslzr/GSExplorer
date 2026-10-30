@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Segmented ring progress gauge (used by the scan / action progress popups).
 
   ┌──────────────┐   48 rounded segments, lit clockwise from 12 o'clock, teal → green.

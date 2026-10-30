@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """One folder tab: breadcrumb + details/icon view + quick filter + status line."""
 from __future__ import annotations
 

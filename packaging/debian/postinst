@@ -1,5 +1,7 @@
 #!/bin/sh
-# GSExplorer+ 26.3.0 postinst — refresh desktop/icon caches. Never changes the
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
+# GSExplorer+ 26.8.0 postinst — refresh desktop/icon caches. Never changes the
 # system default file manager (that stays the user's choice).
 set -e
 

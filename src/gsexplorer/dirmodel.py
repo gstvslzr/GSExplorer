@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Directory listing model with background scanning, Python-side sort/filter.
 
 Scanning (os.scandir + lstat) runs in a QThreadPool worker; the UI thread only

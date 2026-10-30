@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Connect UI end-to-end against live servers (run inside a D-Bus session with gvfsd).
 
 GX_LIVE=1 QT_QPA_PLATFORM=offscreen python tests/test_connect_ui.py

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Compress / extract archives (no Qt; unit-testable).
 
 Built in (Python standard library, bundled): .zip, .tar, .tar.gz/.tgz, .tar.bz2/.tbz2, .tar.xz/.txz,

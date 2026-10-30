@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Connect: network file systems, remote shells, remote desktops and cloud drives.
 
 Backends (all standard Ubuntu components; GSExplorer+ itself contains no network code):

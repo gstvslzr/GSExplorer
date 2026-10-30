@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Scheduled sync/backup runs via systemd *user* timers (no root, no cron edits).
 
 Each profile gets ~/.config/systemd/user/gsexplorer-plus-sync-<slug>.{service,timer}.

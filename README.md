@@ -1,32 +1,77 @@
-# GSExplorer+ 26.7.0
+# GSExplorer+ 26.8.0
 
-Created by **Gus Salazar**. © 2026 Gus Salazar. All rights reserved.
+**GSExplorer+** (formerly GExplorer) is a dual-pane, keyboard-first file manager for Linux, with tabs,
+a breadcrumb path bar, a background operation queue, Find Files, Find Duplicates, Sync & Backup,
+archives, a preview panel, a built-in media player and network connections.
 
-Dual-pane, keyboard-first file manager for Ubuntu 24.04 (Total Commander / Double Commander
-style), with tabs, breadcrumb path bar, a background operation queue and themes.
-Self-contained `.deb`: ships its own Python 3.12 runtime and Qt 6 (PySide6) under `/opt/gexplorer`.
+Created by **Gus Salazar**. © 2026 Gus Salazar.
+Free software under the **GNU General Public License v3.0 or later** — see [LICENSE](LICENSE).
 
-**Privacy/OPSEC:** no telemetry, no auto-update; the network is used only when you use Connect or open a network location. Settings live in
-`~/.config/gexplorer/`. The Qt TUIO touch plugin (the only component that would open a UDP
-socket) is removed from the bundle at build time. QtNetwork stays bundled because Qt Multimedia
-requires it; GSExplorer+ makes no network requests of its own through it.
+> **AI-assistance disclosure.** Most of GSExplorer+'s source code, tests, packaging and
+> documentation were generated with the assistance of an AI model (Anthropic Claude), then reviewed,
+> run and tested by the author. See [AI-DISCLOSURE.md](AI-DISCLOSURE.md) for the extent.
 
-## Install / remove
+The `.deb` is self-contained: it ships its own Python 3.12 runtime and Qt 6 (PySide6) under
+`/opt/gsexplorer-plus`, so it does not depend on the system Python.
+
+**Privacy:** no telemetry, no analytics, no auto-update. The network is used only when you use
+Connect or open a network location. Settings live in `~/.config/gsexplorer-plus/`. The Qt TUIO
+touch plugin (the only bundled component that would open a UDP socket) is removed at build time.
+QtNetwork stays bundled because Qt Multimedia requires it; GSExplorer+ makes no network requests of
+its own through it.
+
+## Install
+
+Download `gsexplorer-plus_26.8.0_amd64.deb`, `SHA256SUMS` and `SHA256SUMS.asc` from the
+[latest release](https://github.com/gstvslzr/GSExplorer/releases/latest), then:
 
 ```bash
-sha256sum -c gexplorer_26.7.0_amd64.deb.sha256
-sudo apt install ./gexplorer_26.7.0_amd64.deb      # apt resolves libraries + recommended helpers
-gexplorer                                          # or launch "GSExplorer+" from the app grid
-sudo apt remove gexplorer                          # or: sudo apt purge gexplorer
+sha256sum -c --ignore-missing SHA256SUMS
+sudo apt install ./gsexplorer-plus_26.8.0_amd64.deb   # apt resolves libraries + recommended helpers
+gsexplorer-plus                                        # or launch "GSExplorer+" from the app grid
 ```
 
+Requires Ubuntu 24.04 or newer on x86-64 (glibc ≥ 2.38).
+
+Remove: `sudo apt remove gsexplorer-plus` (or `purge`). Purge does not delete your settings
+(Debian Policy forbids packages touching home directories); remove them by hand:
+`rm -rf ~/.config/gsexplorer-plus ~/.cache/gsexplorer-plus ~/.local/share/gsexplorer-plus`.
+Remove any sync schedules (Sync & Backup ▸ Schedule… ▸ Remove) **before** uninstalling.
+
 It does **not** become your default file manager. To make it the default for folders:
-`xdg-mime default gsexplorer.desktop inode/directory` (undo: `xdg-mime default org.gnome.Nautilus.desktop inode/directory`).
+`xdg-mime default io.github.gstvslzr.GSExplorer.desktop inode/directory`
+(undo: `xdg-mime default org.gnome.Nautilus.desktop inode/directory`).
 
-Purge does not delete `~/.config/gexplorer` (Debian Policy forbids packages touching home
-directories). Remove it by hand: `rm -rf ~/.config/gexplorer ~/.cache/gexplorer`.
+### Upgrading from GExplorer (≤ 26.7.0)
 
-## Phase 1 features
+`sudo apt install ./gsexplorer-plus_26.8.0_amd64.deb` replaces the old `gexplorer` package.
+On first start GSExplorer+ moves `~/.config/gsexplorer-plus`, `~/.local/share/gsexplorer-plus` and
+`~/.cache/gexplorer` to the `gsexplorer-plus` folders (only if those don't exist yet), re-creates
+scheduled `gexplorer-sync-*` timers as `gsexplorer-plus-sync-*` (old unit files are kept with a
+`.migrated` suffix), and keeps reading passwords saved in the keyring under the old name.
+The `gexplorer` command remains as an alias for one transition period.
+
+## Licensing and third-party software
+
+| Component | License | Notes |
+|---|---|---|
+| GSExplorer+ | GPL-3.0-or-later | this repository |
+| Qt 6, Qt for Python (PySide6, Shiboken6) 6.12.0 | LGPL-3.0 (upstream: LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only) | shipped as replaceable shared libraries |
+| FFmpeg (from the PySide6-Addons wheel, for Qt Multimedia) | LGPL-2.1-or-later | the build verifies the embedded license string |
+| CPython 3.12 runtime | PSF-2.0 | |
+| PyInstaller bootloader | GPL-2.0-or-later with bootloader exception | |
+
+**Help ▸ About GSExplorer+** shows the license, every bundled component with its full license text,
+the LGPL notice and source offer, privacy details and system information. The same inventory is
+installed at `/opt/gsexplorer-plus/share/licenses/` and `/usr/share/doc/gsexplorer-plus/copyright`
+(DEP-5). Each release attaches an SPDX SBOM and the corresponding source of the bundled LGPL
+libraries.
+
+The Qt modules that are GPL-only for open-source users (Qt Charts, Qt Data Visualization,
+Qt Virtual Keyboard) are excluded; the build fails if any of them, or a non-LGPL FFmpeg,
+ends up in the bundle (`packaging/collect_licenses.py`).
+
+## Core features
 
 | Area | What works |
 |---|---|
@@ -37,7 +82,7 @@ directories). Remove it by hand: `rm -rf ~/.config/gexplorer ~/.cache/gexplorer`
 | Safety | Atomic overwrite (temp file + rename), symlinks copied as links and never followed, copy-into-itself blocked, free-space check before cross-device copy, ENOSPC aborts cleanly, FIFOs never read |
 | Trash | freedesktop.org Trash spec (home trash + `$topdir/.Trash-$uid` on other drives), restore, empty; offers permanent delete if a drive can't trash |
 | Other | Properties with size calculation and chmod/chown (pkexec only when needed), Open With (.desktop apps + custom command), F3 viewer (text, hex, images; ←/→ previous/next file), F4 editor, terminal here (F12), bookmarks (Ctrl+D), unmount (udisksctl), session restore |
-| Themes | Follow system, Light, Dark, Midnight, High Contrast; user themes as JSON in `~/.config/gexplorer/themes/` (View > Theme > Open themes folder) |
+| Themes | Follow system, Light, Dark, Midnight, High Contrast; user themes as JSON in `~/.config/gsexplorer-plus/themes/` (View > Theme > Open themes folder) |
 | Filenames | Non-UTF-8 bytes and newlines survive every operation exactly; shown as U+FFFD and ⏎ |
 
 ## 26.7.0 — Synchronize: live progress window
@@ -344,7 +389,7 @@ Preferences > *Open video/audio with* can switch back to the system app or VLC.
   selection (embedded tracks), fullscreen with auto-hiding controls, on-screen feedback.
 - Music: cover art from tags or cover.jpg/folder.jpg, title/artist/album.
 - Resumes files longer than 3 minutes where you stopped (stored only in
-  `~/.local/share/gexplorer/media-positions.json`, last 500 files).
+  `~/.local/share/gsexplorer-plus/media-positions.json`, last 500 files).
 - Keys: Space/K play-pause · ←/→ 5 s · J/L 10 s · Shift+←/→ 1 min · ↑/↓ volume · M mute ·
   F/F11/double-click fullscreen · Esc exit fullscreen · N/P next/previous · [ ] speed · Home restart ·
   S stop · Ctrl+L playlist · Ctrl+O add files. Mouse: click picture = pause, wheel = volume.
@@ -381,10 +426,10 @@ Found by driving the window with real mouse/keyboard input and by backing up to 
 | SSH terminal | `ssh [-p port] [-i key] user@host` in your terminal | `openssh-client` |
 | RDP / VNC | Remmina, FreeRDP (`xfreerdp3 … /cert:tofu`), GNOME Connections or TigerVNC; the client asks for the password | `remmina` + plugins, or `freerdp3-x11` |
 | OneDrive / Google Drive | Settings > Online Accounts (Microsoft 365 / Google, "Files" on); the drive then appears under Network | GNOME 46 (Ubuntu 24.04) |
-| rclone remotes | `rclone mount remote: ~/.local/share/gexplorer/mnt/remote --daemon` | `rclone`, `fuse3` |
+| rclone remotes | `rclone mount remote: ~/.local/share/gsexplorer-plus/mnt/remote --daemon` | `rclone`, `fuse3` |
 
 Security: passwords go to the mount helper's **stdin** (never argv/env); "Remember password" uses
-only the **system keyring** (`secret-tool`); `~/.config/gexplorer/connections.json` (0600) never holds
+only the **system keyring** (`secret-tool`); `~/.config/gsexplorer-plus/connections.json` (0600) never holds
 passwords. Unknown SSH host keys must be confirmed; a **changed** key is refused. FTP and plain
 WebDAV show a clear-text warning.
 
@@ -415,7 +460,7 @@ pane folders straight away (active pane = source).
 |---|---|
 | Mirror → | Target becomes an exact copy; extra target files are removed (versioned) |
 | Update → | Copy new and newer files; never deletes; never overwrites a newer target file |
-| Two-way ↔ | Creates, changes and deletions flow both ways using a per-pair state DB (`~/.local/share/gexplorer/sync-state/`). Changed-on-both-sides and changed-vs-deleted become **conflicts** you resolve per file. First run only merges |
+| Two-way ↔ | Creates, changes and deletions flow both ways using a per-pair state DB (`~/.local/share/gsexplorer-plus/sync-state/`). Changed-on-both-sides and changed-vs-deleted become **conflicts** you resolve per file. First run only merges |
 | Snapshot backup | `TARGET/YYYY-MM-DD_HHMMSS/` full browsable copy per run; unchanged files are hard links to the previous snapshot (rsync `--link-dest` semantics); keep N; `latest` symlink; interrupted runs are left as `*.partial` and cleaned up next run |
 
 - **Compare** scans both sides in the background and shows a preview grid (category, sizes,
@@ -430,12 +475,12 @@ pane folders straight away (active pane = source).
   nested pairs, and a mirror whose source is empty while the target isn't. Writes go to a temp
   file then atomic rename; a file that changed since Compare is skipped; a per-pair lock
   stops a scheduled run and a GUI run colliding.
-- **Profiles:** `~/.config/gexplorer/sync/<name>.json`, several tasks each, enable/reorder.
+- **Profiles:** `~/.config/gsexplorer-plus/sync/<name>.json`, several tasks each, enable/reorder.
   Optional before/after shell commands (`$GX_LEFT`, `$GX_RIGHT`, `$GX_ERRORS`).
-- **Headless:** `gexplorer --sync "Nightly" [--dry-run] [--quiet]` prints JSON; exit
+- **Headless:** `gsexplorer-plus --sync "Nightly" [--dry-run] [--quiet]` prints JSON; exit
   0 success, 1 warnings (e.g. unresolved conflicts), 2 errors, 3 cancelled. Logs:
-  `~/.local/share/gexplorer/sync-logs/`.
-- **Schedule…** writes a systemd *user* timer (`~/.config/systemd/user/gexplorer-sync-*.timer`)
+  `~/.local/share/gsexplorer-plus/sync-logs/`.
+- **Schedule…** writes a systemd *user* timer (`~/.config/systemd/user/gsexplorer-plus-sync-*.timer`)
   — Hourly/Daily/Weekly/Monthly or any `OnCalendar` expression, validated live with
   `systemd-analyze`; "run missed jobs" = `Persistent=true`. Timers only fire while you're logged in
   unless you enable linger (button in the dialog). Errors trigger a desktop notification.
@@ -444,36 +489,30 @@ pane folders straight away (active pane = source).
 ## Build from source
 
 ```bash
-sudo apt install python3.12-venv binutils dpkg-dev
-./packaging/build-deb_v26.7.0.sh --test     # runs every test suite, builds dist/*.deb, then self-tests the frozen app
+sudo apt install python3.12-venv binutils dpkg-dev git
+./packaging/build-deb_v26.8.0.sh --test   # runs every test suite, builds dist/*.deb, self-tests the frozen app
 ```
 
-Build-time only: downloads `PySide6-Essentials==6.12.0`, `PySide6-Addons==6.12.0` and `pyinstaller==6.22.3` from PyPI
-into a throwaway venv. `packaging/prune_bundle.py` strips host system libraries from the
-bundle and derives the package `Depends:` from the ELF `NEEDED` entries of what remains.
+Build-time only, into a throwaway venv: the hash-pinned packages in
+`packaging/requirements-build.txt` (PySide6-Essentials/Addons 6.12.0, PyInstaller 6.22.3 and
+their dependencies) are downloaded from PyPI with `pip --require-hashes`.
+`packaging/prune_bundle.py` strips host system libraries from the bundle and derives the package
+`Depends:` from the ELF `NEEDED` entries of what remains. `packaging/collect_licenses.py` then
+inventories every bundled component's license (fails the build on licensing blockers), and
+`packaging/make_sbom.py` writes the SPDX SBOM next to the `.deb`.
 
 ## Tests
 
 ```bash
-QT_QPA_PLATFORM=offscreen python tests/test_core.py   # file ops, trash, 100k-entry model
-QT_QPA_PLATFORM=offscreen python tests/test_ui.py     # end-to-end UI flows, throwaway $HOME
-python tests/test_sync.py                             # sync engine: every mode + safety rule
-QT_QPA_PLATFORM=offscreen python tests/test_sync_ui.py # sync window end to end
-QT_QPA_PLATFORM=offscreen python tests/test_preview.py  # thumbnails + preview panel
-QT_QPA_PLATFORM=offscreen python tests/test_player.py   # GSExplorer+ Player (needs ffmpeg)
-QT_QPA_PLATFORM=offscreen python tests/test_connect.py  # Connect (live parts need GX_LIVE=1)
-QT_QPA_PLATFORM=offscreen python tests/test_connect_ui.py
-QT_QPA_PLATFORM=offscreen python tests/test_viewer.py   # F3 viewer previous/next
-python tests/test_dupes.py                            # duplicate engine: matching, guards, audit, undo
-QT_QPA_PLATFORM=offscreen python tests/test_dupes_ui.py # Find Duplicates window end to end
-python tests/test_archives.py                         # compress/extract: formats, malicious archives, passwords
-QT_QPA_PLATFORM=offscreen python tests/test_archives_ui.py # context menu, queue jobs, terminal folder
-python tests/test_search.py                           # search engine: every criterion, documents, archives, index
-QT_QPA_PLATFORM=offscreen python tests/test_search_ui.py   # Find Files window end to end
-QT_QPA_PLATFORM=offscreen python tests/test_sync_progress.py # sync progress: engine ops, job state, window
+for f in tests/test_*.py; do QT_QPA_PLATFORM=offscreen PYTHONPATH=src python3 "$f" || break; done
 ```
 
-## Known limitations (Phase 1)
+18 suites, all headless with a throwaway `$HOME`: core file operations and trash, UI flows, sync
+engine and window, sync progress, preview and thumbnails, media player (needs `ffmpeg`), Connect
+(live parts need `GX_LIVE=1`), F3 viewer, Find Duplicates, archives, Find Files, the
+GExplorer → GSExplorer+ migration and the About dialog.
+
+## Known limitations
 
 - Requires glibc ≥ 2.38: installs on Ubuntu 24.04+, **not** on Debian 12 (glibc 2.36). A
   Debian 12 build must be produced on a Debian 12 machine with the same script.
@@ -484,10 +523,11 @@ QT_QPA_PLATFORM=offscreen python tests/test_sync_progress.py # sync progress: en
 - Sync: no SSH/remote targets, no real-time (watch-and-sync) mode, no moved-file detection
   (a moved file is copied + deleted). Hard-link snapshots need a Linux filesystem on the target
   (ext4/btrfs/xfs); on exFAT/FAT/NTFS-via-FUSE each snapshot is a full copy (warned in preview).
-- No undo; multi-rename, archives, search, preview pane, SFTP/SMB, custom actions
-  and embedded terminal are Phase 2.
+- No general undo (Find Duplicates has its own undo), no multi-rename, no custom actions and no
+  embedded terminal.
 - Sorting a 100k-entry folder briefly blocks the UI (~90–130 ms measured); scanning itself is
   in the background.
 - Network mounts that hang (dead NFS/SMB) can stall the folder being opened.
 - File ops that need root (other than chmod/chown in Properties) report "Permission denied"
   rather than escalating.
+- x86-64 only; no Flatpak, Snap or AppImage yet.

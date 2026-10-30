@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Filesystem helpers: display names, sizes, unique names, freedesktop Trash.
 
 Paths are Python ``str`` objects. Undecodable bytes in filenames survive as

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Thumbnails + preview panel tests (headless). Needs ffmpeg + pdftoppm for full coverage.
 
 Run: QT_QPA_PLATFORM=offscreen python tests/test_preview.py

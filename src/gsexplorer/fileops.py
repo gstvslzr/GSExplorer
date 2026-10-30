@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Background file-operation queue: copy, move, delete, trash.
 
 * One worker thread runs jobs sequentially (Total Commander-style queue), so a

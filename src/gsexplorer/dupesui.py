@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Duplicates window (Tools > Find Duplicates, Ctrl+Shift+D).
 
 Results use a model/view list (DupModel + a table view): rows are formatted only when drawn, so a result

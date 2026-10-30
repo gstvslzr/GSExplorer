@@ -1,6 +1,8 @@
 #!/bin/sh
-# GSExplorer+ 26.3.0 postrm — refresh caches after removal.
-# Per Debian Policy, user files (~/.config/gexplorer) are never touched, even on purge.
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
+# GSExplorer+ 26.8.0 postrm — refresh caches after removal.
+# Per Debian Policy, user files (~/.config/gsexplorer-plus) are never touched, even on purge.
 set -e
 
 case "$1" in

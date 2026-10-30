@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Duplicates engine tests. Run: python tests/test_dupes.py"""
 import csv
 import os

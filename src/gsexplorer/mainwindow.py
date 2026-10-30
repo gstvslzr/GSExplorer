@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Main window: sidebar + two tabbed panes + command line + F-key bar."""
 from __future__ import annotations
 
@@ -1397,7 +1399,7 @@ class MainWindow(QMainWindow):
 def _app_icon() -> QIcon:
     ic = QIcon.fromTheme(RDNN_ID)
     if ic.isNull():
-        here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "gsexplorer.svg")
+        here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "gsexplorer-plus.svg")
         if os.path.exists(here):
             ic = QIcon(here)
     return ic

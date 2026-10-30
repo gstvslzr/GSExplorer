@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Connect backend tests.
 
 Pure tests (URI building, validation, storage, desktop commands) always run.

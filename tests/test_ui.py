@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """UI-level integration tests (headless). Modal dialogs are auto-answered.
 
 Run:  QT_QPA_PLATFORM=offscreen python tests/test_ui.py

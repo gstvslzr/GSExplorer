@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Synchronize progress: engine operation reporting, job live state, and the progress window.
 
 Run: QT_QPA_PLATFORM=offscreen python tests/test_sync_progress.py

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Archive engine tests: round trips, malicious archives, passwords, cancel, space guard.
 
 Run: python tests/test_archives.py     (7z / zstd parts run only when those tools are installed)

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Busy overlay with a turning gear: "the window is working on something".
 
 Covers its parent widget (follows its size), blocks clicks underneath, and shows a message such as

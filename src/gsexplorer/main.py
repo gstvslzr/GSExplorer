@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Entry point.
 
   gsexplorer-plus [FOLDER | FILE | file:///URI]

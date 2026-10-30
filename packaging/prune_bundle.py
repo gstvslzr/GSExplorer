@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Prune a PyInstaller onedir bundle and compute Debian Depends from what's left.
 
-Policy (GSExplorer+ 26.0.1):
+Policy (since 26.0.1):
   * Keep: Python runtime, PySide6/Shiboken, Qt 6 libraries, ICU (Qt's private copy).
   * Drop: every *system* library PyInstaller copied from the build host (X11, GTK,
     glib, libstdc++ ...). Those come from Ubuntu packages listed in Depends, so

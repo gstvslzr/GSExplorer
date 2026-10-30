@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Launching: default app (xdg-open), desktop-entry apps (Open With), terminal, editor.
 
 All launches use argument lists (never a shell) unless the user typed a shell

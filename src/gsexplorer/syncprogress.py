@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Synchronize: live progress window.
 
 Opened by the Synchronize tool when a run starts. Shows, for the whole run (all tasks of the profile):

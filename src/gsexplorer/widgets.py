@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Small reusable widgets: breadcrumb path bar, function-key bar."""
 from __future__ import annotations
 

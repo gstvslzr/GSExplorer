@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Built-in stroke icons for chrome (toolbar, path bar), tinted to the active theme.
 
 System icon themes ship many toolbar icons as dark "symbolic" glyphs that vanish

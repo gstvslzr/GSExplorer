@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Gus Salazar -->
+<component type="desktop-application">
+  <id>io.github.gstvslzr.GSExplorer</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <name>GSExplorer+</name>
+  <summary>Dual-pane, keyboard-first file manager</summary>
+
+  <developer id="io.github.gstvslzr">
+    <name>Gus Salazar</name>
+  </developer>
+
+  <description>
+    <p>GSExplorer+ is a dual-pane file manager built for keyboard-first work on the Linux desktop.</p>
+    <ul>
+      <li>Two panes with tabs, a breadcrumb path bar and a background operation queue with pause and cancel</li>
+      <li>Find Files by name, wildcard or regular expression, text inside files and office documents</li>
+      <li>Find Duplicates with content hashing and safe, reversible removal</li>
+      <li>Sync and Backup: mirror, update, two-way and hard-linked snapshot backups, with scheduling</li>
+      <li>Compress and extract ZIP, TAR and 7Z archives</li>
+      <li>Preview panel, F3 viewer and a built-in media player</li>
+      <li>Connect to SMB, SFTP, FTP, WebDAV and NFS shares; passwords stay in the system keyring</li>
+    </ul>
+    <p>No telemetry and no automatic updates. Most of the code was written with AI assistance (Anthropic Claude) and reviewed and tested by the author.</p>
+  </description>
+
+  <launchable type="desktop-id">io.github.gstvslzr.GSExplorer.desktop</launchable>
+
+  <url type="homepage">https://github.com/gstvslzr/GSExplorer</url>
+  <url type="bugtracker">https://github.com/gstvslzr/GSExplorer/issues</url>
+  <url type="vcs-browser">https://github.com/gstvslzr/GSExplorer</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/gstvslzr/GSExplorer/v26.8.0/docs/screenshots/main.png</image>
+      <caption>Two panes with tabs, the sidebar and the function-key bar</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/gstvslzr/GSExplorer/v26.8.0/docs/screenshots/about-third-party.png</image>
+      <caption>About: bundled components and their licenses</caption>
+    </screenshot>
+  </screenshots>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#8fb3d9</color>
+    <color type="primary" scheme_preference="dark">#1f3a5c</color>
+  </branding>
+
+  <content_rating type="oars-1.1"/>
+
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">768</display_length>
+  </requires>
+
+  <provides>
+    <binary>gsexplorer-plus</binary>
+  </provides>
+
+  <releases>
+    <release version="26.8.0" date="2026-10-30">
+      <url type="details">https://github.com/gstvslzr/GSExplorer/releases/tag/v26.8.0</url>
+      <description>
+        <p>First public release, renamed from GExplorer to GSExplorer+ and licensed under the GPL-3.0-or-later.</p>
+        <ul>
+          <li>Help, About shows the license, every bundled component with its license text, the LGPL source offer, privacy details and system information</li>
+          <li>Settings, sync profiles, schedules and saved passwords carry over from GExplorer automatically</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>

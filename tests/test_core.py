@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Core tests for GSExplorer+: trash spec, file-operation queue, model scanning.
 
 Run:  HOME=$(mktemp -d) QT_QPA_PLATFORM=offscreen python -m pytest -q tests/

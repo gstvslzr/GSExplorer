@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Duplicates window, end to end (headless). Run: QT_QPA_PLATFORM=offscreen python tests/test_dupes_ui.py"""
 import csv
 import os

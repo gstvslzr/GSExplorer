@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """GSExplorer+ Sync & Backup engine (no Qt dependency; also used by `gsexplorer-plus --sync`).
 
 Modes (per task / folder pair):

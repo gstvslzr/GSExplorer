@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Dialogs: transfer, conflict, properties, open-with, queue, viewer, preferences, about."""
 from __future__ import annotations
 

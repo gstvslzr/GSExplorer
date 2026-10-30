@@ -1,17 +1,17 @@
-.TH GEXPLORER 1 "October 2026" "GSExplorer+ 26.6.0" "User Commands"
+.TH GSEXPLORER-PLUS 1 "October 2026" "GSExplorer+ 26.8.0" "User Commands"
 .SH NAME
-gexplorer \- dual-pane file manager
+gsexplorer-plus \- dual-pane file manager (GSExplorer+)
 .SH SYNOPSIS
-.B gexplorer
+.B gsexplorer-plus
 [\fIFOLDER\fR | \fIFILE\fR | \fIfile:///URI\fR]
 .br
-.B gexplorer
+.B gsexplorer-plus
 \-\-sync \fIPROFILE\fR [\-\-dry\-run] [\-\-quiet]
 .br
-.B gexplorer
+.B gsexplorer-plus
 \-\-list\-profiles
 .br
-.B gexplorer
+.B gsexplorer-plus
 \-\-version | \-\-help
 .SH DESCRIPTION
 GSExplorer+ is a keyboard-friendly, dual-pane file manager with tabs, a
@@ -52,7 +52,7 @@ freedesktop cache; external thumbnailers run sandboxed with bubblewrap when avai
 Double-clicking a video or audio file opens GSExplorer+ Player (Preferences can choose the system
 app or VLC instead). It plays the folder as a playlist, with fullscreen, speed 0.5x to 2x, audio and
 subtitle tracks, cover art, repeat/shuffle, and resumes long files where you stopped (positions are
-kept in ~/.local/share/gexplorer/media-positions.json). Keys: Space play/pause, Left/Right 5 s,
+kept in ~/.local/share/gsexplorer-plus/media-positions.json). Keys: Space play/pause, Left/Right 5 s,
 J/L 10 s, Up/Down volume, M mute, F fullscreen, N/P next/previous, [ ] speed.
 .SH FIND FILES
 The magnifying-glass toolbar button, Ctrl+F or Alt+F7 (or right-click a folder > Search in…) opens
@@ -94,22 +94,22 @@ Ctrl+S quick filter, Ctrl+H hidden files, Ctrl+J operations queue.
 Help > Keyboard shortcuts lists all keys.
 .SH FILES
 .TP
-.I ~/.config/gexplorer/config.json
+.I ~/.config/gsexplorer-plus/config.json
 Settings, bookmarks and the last session.
 .TP
-.I ~/.config/gexplorer/themes/*.json
+.I ~/.config/gsexplorer-plus/themes/*.json
 User themes. Files override built-in themes with the same name.
 .TP
-.I ~/.config/gexplorer/sync/*.json
+.I ~/.config/gsexplorer-plus/sync/*.json
 Sync & Backup profiles.
 .TP
-.I ~/.local/share/gexplorer/sync-logs/
+.I ~/.local/share/gsexplorer-plus/sync-logs/
 Run logs (last 100 kept). Two-way state databases live in ../sync-state/.
 .TP
-.I ~/.config/systemd/user/gexplorer-sync-*.timer
+.I ~/.config/systemd/user/gsexplorer-plus-sync-*.timer
 Schedules created by the Schedule dialog (systemd user timers).
 .TP
-.I ~/.config/gexplorer/connections.json
+.I ~/.config/gsexplorer-plus/connections.json
 Saved connections (mode 0600; never contains passwords).
 .TP
 .I ~/.cache/thumbnails/
@@ -120,8 +120,25 @@ Home trash (freedesktop.org Trash specification).
 .SH PRIVACY
 No telemetry and no auto-update. GSExplorer+ only uses the network when you connect to a server or
 open a network location.
+.SH EXIT STATUS
+For \-\-sync: 0 success, 1 warnings, 2 errors, 3 cancelled.
+.SH MIGRATION
+Version 26.8.0 renamed GExplorer to GSExplorer+. On first start, settings and data in
+~/.config/gexplorer, ~/.local/share/gexplorer and ~/.cache/gexplorer move to the
+gsexplorer-plus folders (only when the new folders do not exist yet), and scheduled
+gexplorer-sync-* timers are re-created as gsexplorer-plus-sync-*. The old unit files are kept
+with a .migrated suffix. Passwords saved in the keyring under the old name keep working.
+The \fBgexplorer\fR command remains as an alias for one transition period.
+.SH LICENSE
+GSExplorer+ is free software under the GNU General Public License version 3 or later.
+It bundles Qt 6, Qt for Python (PySide6) and FFmpeg under the GNU LGPL; see Help > About >
+Third-party software, /usr/share/doc/gsexplorer-plus/copyright and
+/opt/gsexplorer-plus/share/licenses/.
 .SH AUTHOR
-Created by Gus Salazar.
+Created by Gus Salazar. Parts of the code were written with AI assistance (Anthropic Claude)
+and reviewed by the author.
+.SH BUGS
+https://github.com/gstvslzr/GSExplorer/issues
 .SH NOTES
-Removing the package (even with purge) does not delete ~/.config/gexplorer;
+Removing the package (even with purge) does not delete ~/.config/gsexplorer-plus;
 Debian policy forbids packages from modifying users' home directories.

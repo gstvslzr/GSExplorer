@@ -3,18 +3,18 @@ Type=Application
 Version=1.5
 Name=GSExplorer+
 GenericName=File Manager
-Comment=Dual-pane file manager
-Exec=gexplorer %U
-TryExec=gexplorer
-Icon=gexplorer
+Comment=Dual-pane, keyboard-first file manager
+Exec=gsexplorer-plus %U
+TryExec=gsexplorer-plus
+Icon=io.github.gstvslzr.GSExplorer
 Terminal=false
 StartupNotify=true
-StartupWMClass=gexplorer
-Categories=System;FileTools;FileManager;Utility;Qt;
-Keywords=files;folders;explorer;commander;dual pane;file manager;
+StartupWMClass=gsexplorer-plus
+Categories=System;FileTools;FileManager;Qt;
+Keywords=files;folders;explorer;commander;dual pane;file manager;sync;backup;duplicates;
 MimeType=inode/directory;
 Actions=new-window;
 
 [Desktop Action new-window]
 Name=New Window
-Exec=gexplorer
+Exec=gsexplorer-plus

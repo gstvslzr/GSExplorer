@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Duplicates engine (no Qt; unit-testable).
 
 Content matching is staged so that most files are never read in full:

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Sync & Backup engine tests (no GUI). Run: python tests/test_sync.py
 
 Every test runs in a throwaway HOME/XDG tree; nothing outside it is touched.

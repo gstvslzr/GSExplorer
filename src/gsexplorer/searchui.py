@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2026 Gus Salazar
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Find Files window (toolbar 🔍, Ctrl+F, Alt+F7, or right-click a folder ▸ Search in…)."""
 from __future__ import annotations
 
