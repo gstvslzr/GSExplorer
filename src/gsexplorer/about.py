@@ -31,7 +31,7 @@ APP_INFO = {
     "name": APP_NAME,
     "app_id": RDNN_ID,
     "version": VERSION,
-    "tagline": "Dual-pane, keyboard-first file manager for Linux",
+    "tagline": "Dual-pane, keyboard-first file manager for " + ("Windows (portable build)" if sys.platform == "win32" else "Linux"),
     "author": AUTHOR,
     "copyright": COPYRIGHT,
     "license_spdx": LICENSE_SPDX,
@@ -59,11 +59,21 @@ OPTIONAL_TOOLS = [
     ("bubblewrap", "sandboxed thumbnailers"),
     ("GVFS", "network mounts (SMB, SFTP, FTP, WebDAV, NFS)"),
 ]
+if sys.platform == "win32":
+    OPTIONAL_TOOLS = [
+        ("7-Zip", "7z/RAR/ISO archives (found in Program Files or on PATH)"),
+        ("zstd", ".zst archives"),
+        ("Poppler (pdftotext)", "PDF text search"),
+        ("VLC", "alternative media player"),
+    ]
 
 
 def _install_root() -> Path:
     """Directory that holds share/ — the bundle root when frozen, else this file's folder."""
     if getattr(sys, "frozen", False):
+        mei = getattr(sys, "_MEIPASS", None)
+        if mei and (Path(mei) / "share").is_dir():        # one-file .exe: data is extracted here
+            return Path(mei)
         base = Path(sys.executable).resolve().parent
         return base.parent if base.name == "_internal" else base
     env = os.environ.get("GSEXPLORER_ROOT")
@@ -106,6 +116,14 @@ def ffmpeg_version(licenses: dict) -> str:
 
 
 def os_release() -> str:
+    if sys.platform == "win32":
+        ver = platform.version()
+        try:
+            build = int(ver.split(".")[-1])
+        except ValueError:
+            build = 0
+        name = "Windows 11" if build >= 22000 else f"Windows {platform.release()}"
+        return f"{name} (build {ver}, {platform.machine()})"
     try:
         data = {}
         for line in Path("/etc/os-release").read_text(encoding="utf-8").splitlines():
@@ -287,6 +305,8 @@ class AboutDialog(QDialog):
         return self._browser(body)
 
     def _tab_privacy(self) -> QWidget:
+        if sys.platform == "win32":
+            return self._browser(self._privacy_windows())
         body = """
         <h3>Privacy</h3>
         <ul>
@@ -303,6 +323,29 @@ class AboutDialog(QDialog):
         """
         return self._browser(body)
 
+    @staticmethod
+    def _privacy_windows() -> str:
+        from . import winplat
+        loc = winplat.data_locations()
+        portable = winplat.portable_root()
+        rows = "".join(f"<li>{html.escape(k)}: <code>{html.escape(v)}</code></li>" for k, v in loc.items())
+        mode = ("<p><b>Portable mode is on</b>: everything is stored in the <code>gsexplorer-plus-data</code> "
+                "folder next to the program.</p>" if portable else
+                "<p>To run in <b>portable mode</b> (for example from a USB drive), create a folder named "
+                "<code>gsexplorer-plus-data</code> next to the .exe; settings, logs and caches then stay "
+                "in it and nothing is written to your profile.</p>")
+        return f"""
+        <h3>Privacy</h3>
+        <ul>
+          <li><b>No telemetry, no analytics, no automatic updates.</b> No installation, no registry entries.</li>
+          <li>The network is used only when you open a network location (for example <code>\\\\server\\share</code>).</li>
+          {rows}
+          <li>Search, duplicate finding, compression and sync all run locally.</li>
+        </ul>
+        {mode}
+        <p>To remove GSExplorer+, delete the .exe and the folders above.</p>
+        """
+
     def _system_text(self) -> str:
         i = self.info
         lines = [
@@ -313,9 +356,10 @@ class AboutDialog(QDialog):
             f"Qt: {qVersion()}",
             f"FFmpeg: {ffmpeg_version(self.licenses)}",
             f"OS: {os_release()}",
-            f"Kernel: {platform.release()}",
-            f"Desktop: {os.environ.get('XDG_CURRENT_DESKTOP', 'unknown')}",
-            f"Session: {os.environ.get('XDG_SESSION_TYPE', 'unknown')}",
+            *([] if sys.platform == "win32" else [
+                f"Kernel: {platform.release()}",
+                f"Desktop: {os.environ.get('XDG_CURRENT_DESKTOP', 'unknown')}",
+                f"Session: {os.environ.get('XDG_SESSION_TYPE', 'unknown')}"]),
             f"Qt platform: {QGuiApplication.platformName()}",
             f"Frozen: {'yes' if getattr(sys, 'frozen', False) else 'no'}",
         ]

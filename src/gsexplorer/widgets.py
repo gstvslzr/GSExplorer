@@ -52,7 +52,7 @@ class Breadcrumb(QFrame):
         self.edit.setPlaceholderText("Type a path and press Enter")
         fsm = QFileSystemModel(self.edit)
         fsm.setFilter(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.Hidden)
-        fsm.setRootPath("/")
+        fsm.setRootPath("" if os.name == "nt" else "/")
         comp = QCompleter(fsm, self.edit)
         comp.setCaseSensitivity(Qt.CaseInsensitive)
         self.edit.setCompleter(comp)
@@ -91,8 +91,10 @@ class Breadcrumb(QFrame):
             if p == home:
                 segs.append(("Home", p))
                 break
-            if p in ("/", ""):
-                segs.append(("/", "/"))
+            if p in ("/", "") or os.path.dirname(p) == p:
+                # filesystem root: "/" on Linux; "C:\\" (shown as "C:") or a UNC share on Windows
+                label = p.rstrip("\\") if os.name == "nt" and len(p) <= 3 else (p or "/")
+                segs.append((display_name(label), p or "/"))
                 break
             segs.append((display_name(os.path.basename(p)), p))
             p = os.path.dirname(p)

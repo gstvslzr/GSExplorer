@@ -193,9 +193,10 @@ def scan(opts: Options, progress=None, cancel: threading.Event | None = None) ->
             except OSError as e:
                 res.errors.append(f"{fsutil.display_path(d)}: {e.strerror or e}")
                 continue
-            if (dst.st_dev, dst.st_ino) in seen_dirs:
-                continue
-            seen_dirs.add((dst.st_dev, dst.st_ino))
+            if dst.st_ino:                     # 0 = this file system has no folder IDs: can't dedupe
+                if (dst.st_dev, dst.st_ino) in seen_dirs:
+                    continue
+                seen_dirs.add((dst.st_dev, dst.st_ino))
             report("walk", res.files_scanned, 0, d)
             try:
                 it = os.scandir(d)
@@ -275,6 +276,26 @@ def scan(opts: Options, progress=None, cancel: threading.Event | None = None) ->
         def make_files(items) -> list[DupFile]:
             return [DupFile(path_of(e), e[2], e[3], e[4], e[5], e[6], links) for e, links in items]
 
+        if os.name == "nt":
+            # Windows: DirEntry.stat() always reports st_dev/st_ino/st_nlink as 0, which would make
+            # every same-size file look like a hard link of the first. Fill the real identity (one
+            # os.lstat each) only for files that share a bucket, so big scans stay cheap.
+            no_id = 0
+            for k, b in buckets.items():
+                if len(b) > 1:
+                    fixed = []
+                    for e in b:
+                        if e[5] == 0:
+                            try:
+                                lst = os.lstat(os.path.join(dirs[e[0]], e[1]))
+                                e = e[:4] + (lst.st_dev, lst.st_ino, lst.st_nlink)
+                            except OSError:
+                                pass
+                        if e[5] == 0:            # file system without stable file IDs:
+                            no_id -= 1           # a unique fake ID, so it's never taken for a hard link
+                            e = e[:4] + (0, no_id, 1)
+                        fixed.append(e)
+                    buckets[k] = fixed
         cands = [b for b in buckets.values() if len(b) > 1 and (opts.hardlinks or unique_inodes(b) > 1)]
         buckets = None                          # free the per-file table of everything else
         gid = 0

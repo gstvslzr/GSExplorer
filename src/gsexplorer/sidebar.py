@@ -10,8 +10,10 @@ from PySide6.QtCore import QStandardPaths, QStorageInfo, Qt, QTimer, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QMenu, QStyle, QTreeWidget, QTreeWidgetItem
 
-from .fsutil import display_name, home_trash, human_size
+from . import winplat
+from .fsutil import RECYCLE_BIN, display_name, home_trash, human_size
 from .icons import themed
+from .winplat import IS_WIN
 
 PATH_ROLE = Qt.UserRole
 KIND_ROLE = Qt.UserRole + 1
@@ -87,11 +89,16 @@ class Sidebar(QTreeWidget):
             p = QStandardPaths.writableLocation(loc)
             if p and p != home and os.path.isdir(p):
                 self._add(places, label, p, themed(icon + ["folder"], QStyle.SP_DirIcon))
-        self._add(places, "File System", "/", themed(["drive-harddisk", "computer"], QStyle.SP_DriveHDIcon))
-        trash_files = os.path.join(home_trash(), "files")
-        self._add(places, "Trash", trash_files,
-                  themed(["user-trash-full" if self._trash_nonempty() else "user-trash"], QStyle.SP_TrashIcon),
-                  kind="trash")
+        trash_icon = themed(["user-trash-full" if self._trash_nonempty() else "user-trash"], QStyle.SP_TrashIcon)
+        if IS_WIN:
+            # Drives are listed under Devices. The Recycle Bin opens in Windows' own window,
+            # where single items can be restored.
+            self._add(places, "Recycle Bin", RECYCLE_BIN, trash_icon, kind="recyclebin",
+                      tip="Windows Recycle Bin (opens in Windows; restore items there)")
+        else:
+            self._add(places, "File System", "/", themed(["drive-harddisk", "computer"], QStyle.SP_DriveHDIcon))
+            trash_files = os.path.join(home_trash(), "files")
+            self._add(places, "Trash", trash_files, trash_icon, kind="trash")
 
         bm = self._section("Bookmarks")
         if not self.bookmarks:
@@ -119,8 +126,8 @@ class Sidebar(QTreeWidget):
     OBJ_ROLE = Qt.UserRole + 2
 
     def _build_network(self) -> None:
-        if self.connector is None:
-            return
+        if self.connector is None or IS_WIN:
+            return      # Windows: network shares are reached as \\server\share or mapped drives
         from . import connect as cn
         net = self._section("Network")
         mounts = cn.list_gio_mounts()
@@ -143,6 +150,8 @@ class Sidebar(QTreeWidget):
         a.setForeground(0, self.palette().placeholderText())
 
     def _signature(self) -> tuple:
+        if IS_WIN:
+            return tuple(r for r, *_ in self._devices()) + (self._trash_nonempty(),)
         from . import connect as cn
         try:
             gv = tuple(sorted(os.listdir(cn.gvfs_dir())))
@@ -153,6 +162,8 @@ class Sidebar(QTreeWidget):
 
     @staticmethod
     def _trash_nonempty() -> bool:
+        if IS_WIN:
+            return winplat.recycle_bin_info()[0] > 0
         try:
             return any(True for _ in os.scandir(os.path.join(home_trash(), "files")))
         except OSError:
@@ -160,6 +171,8 @@ class Sidebar(QTreeWidget):
 
     @staticmethod
     def _devices() -> list[tuple[str, str, bool, str]]:
+        if IS_WIN:
+            return Sidebar._win_drives()
         out = []
         for v in QStorageInfo.mountedVolumes():
             if not v.isValid() or not v.isReady():
@@ -175,6 +188,32 @@ class Sidebar(QTreeWidget):
             free = f"{human_size(v.bytesAvailable())} free of {human_size(v.bytesTotal())} ({fs})"
             out.append((root, name, removable, free))
         out.sort(key=lambda t: t[1].casefold())
+        return out
+
+    @staticmethod
+    def _win_drives() -> list[tuple[str, str, bool, str]]:
+        """Drive letters (and mounted volumes) as "Label (C:)", like Windows Explorer."""
+        out = []
+        kinds = {2: "Removable", 3: "Local Disk", 4: "Network Drive", 5: "CD Drive", 6: "RAM Disk"}
+        for v in QStorageInfo.mountedVolumes():
+            if not v.isValid():
+                continue
+            root = v.rootPath().replace("/", "\\")
+            if not root.endswith("\\"):
+                root += "\\"
+            dt = winplat.drive_type(root)
+            letter = root.rstrip("\\")
+            label = v.displayName() if v.isReady() else ""
+            if not label or label.replace("/", "\\").rstrip("\\") == letter:
+                label = kinds.get(dt, "Drive")
+            name = f"{label} ({letter})" if len(letter) == 2 else label
+            if v.isReady():
+                fs = bytes(v.fileSystemType()).decode("ascii", "replace")
+                info = f"{human_size(v.bytesAvailable())} free of {human_size(v.bytesTotal())} ({fs})"
+            else:
+                info = "not ready"
+            out.append((root, name, dt in (2, 5), info))
+        out.sort(key=lambda t: t[0].casefold())
         return out
 
     def _poll_devices(self) -> None:
@@ -194,6 +233,9 @@ class Sidebar(QTreeWidget):
             return
         if kind == "connect":
             self.connector.connect_dialog()
+            return
+        if kind == "recyclebin":
+            winplat.open_recycle_bin()
             return
         if p:
             if item.data(0, KIND_ROLE) == "trash":
@@ -222,6 +264,11 @@ class Sidebar(QTreeWidget):
             return
         p, kind = it.data(0, PATH_ROLE), it.data(0, KIND_ROLE)
         m = QMenu(self)
+        if kind == "recyclebin":
+            m.addAction("Open Recycle Bin", winplat.open_recycle_bin)
+            m.addAction("Empty Recycle Bin…", lambda: self.window().empty_trash())
+            m.exec(self.viewport().mapToGlobal(pos))
+            return
         if kind in ("net", "saved", "connect"):
             obj = it.data(0, self.OBJ_ROLE)
             if kind == "net":

@@ -44,9 +44,10 @@ SCRIPT_VERSION = "26.8.0"
 
 # Qt modules that are GPLv3-only for open-source users (Qt FAQ 3.7).
 GPL_ONLY_QT = {
-    "Qt Charts": re.compile(r"(^|/)(lib)?Qt6Charts[^/]*\.so|QtCharts\.(abi3\.)?so|QtCharts\.cpython", re.I),
-    "Qt Data Visualization": re.compile(r"(^|/)(lib)?Qt6DataVisualization[^/]*\.so|QtDataVisualization\.(abi3\.)?so|QtDataVisualization\.cpython", re.I),
-    "Qt Virtual Keyboard": re.compile(r"(^|/)(lib)?Qt6VirtualKeyboard[^/]*\.so|QtVirtualKeyboard\.(abi3\.)?so|qtvirtualkeyboardplugin", re.I),
+    # Linux: libQt6Charts.so* / QtCharts.abi3.so;  Windows: Qt6Charts.dll / QtCharts.pyd
+    "Qt Charts": re.compile(r"(^|/)(lib)?Qt6Charts[^/]*\.(so|dll)|QtCharts\.(abi3\.)?(so|pyd)|QtCharts\.cpython", re.I),
+    "Qt Data Visualization": re.compile(r"(^|/)(lib)?Qt6DataVisualization[^/]*\.(so|dll)|QtDataVisualization\.(abi3\.)?(so|pyd)|QtDataVisualization\.cpython", re.I),
+    "Qt Virtual Keyboard": re.compile(r"(^|/)(lib)?Qt6VirtualKeyboard[^/]*\.(so|dll)|QtVirtualKeyboard\.(abi3\.)?(so|pyd)|qtvirtualkeyboardplugin", re.I),
 }
 
 LICENSE_NAME_RE = re.compile(r"^(LICEN[CS]E|COPYING|NOTICE|COPYRIGHT|AUTHORS)([._-].*)?$", re.I)
@@ -176,15 +177,17 @@ def scan_wheels(bundle: Path, out: Path, components: list, warnings: list) -> No
 
 
 def scan_qt(bundle: Path, components: list, blockers: list, warnings: list) -> None:
-    so_files = [p for p in bundle.rglob("*") if p.is_file() and (".so" in p.name)]
-    rels = [str(p.relative_to(bundle)) for p in so_files]
-    qt_libs = sorted({Path(r).name for r in rels if re.search(r"libQt6[A-Za-z0-9]+\.so", Path(r).name)})
+    so_files = [p for p in bundle.rglob("*") if p.is_file()
+                and (".so" in p.name or p.suffix.lower() in (".dll", ".pyd"))]
+    rels = [p.relative_to(bundle).as_posix() for p in so_files]          # "/" on Windows too
+    qt_libs = sorted({Path(r).name for r in rels
+                      if re.search(r"^(lib)?Qt6[A-Za-z0-9]+\.(so|dll)", Path(r).name, re.I)})
     if qt_libs:
         if not any(c["name"].lower().startswith("pyside6") for c in components):
             components.append({
                 "name": "Qt 6 libraries", "version": "", "spdx": "LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only",
                 "homepage": "https://www.qt.io", "kind": "native-library", "license_files": [],
-                "source": f"{len(qt_libs)} libQt6*.so files",
+                "source": f"{len(qt_libs)} Qt6 library files",
             })
             warnings.append("Qt libraries found but no PySide6 dist-info: add the LGPL-3.0 text manually")
     for module, rx in GPL_ONLY_QT.items():
@@ -226,8 +229,8 @@ def _ffmpeg_query(lib: Path, func: str) -> str:
         if crypto:
             ctypes.CDLL(crypto, mode=ctypes.RTLD_GLOBAL)
         for sib in ("libavutil", "libswresample", "libswscale"):
-            for p in sorted(lib.parent.glob(f"{sib}.so.*")):
-                ctypes.CDLL(str(p), mode=ctypes.RTLD_GLOBAL)
+            for p in sorted(lib.parent.glob(f"{sib}.so.*")) + sorted(lib.parent.glob(f"{sib[3:]}-*.dll")):
+                ctypes.CDLL(str(p), mode=getattr(ctypes, "RTLD_GLOBAL", 0))
                 break
         handle = ctypes.CDLL(str(lib))
         fn = getattr(handle, func)
@@ -240,7 +243,7 @@ def _ffmpeg_query(lib: Path, func: str) -> str:
 
 
 # Standard license texts on Debian/Ubuntu build hosts (package base-files).
-COMMON_LICENSES = Path("/usr/share/common-licenses")
+COMMON_LICENSES = Path(os.environ.get("GX_COMMON_LICENSES") or "/usr/share/common-licenses")
 SPDX_TO_COMMON = [  # (substring in SPDX expression, files to ship)
     ("LGPL-3.0", ["LGPL-3", "GPL-3"]),   # LGPLv3 4(b): ship the GPL text with the LGPL text
     ("LGPL-2.1", ["LGPL-2.1"]),
@@ -288,6 +291,8 @@ def scan_ffmpeg(bundle: Path, components: list, blockers: list, warnings: list) 
     if not libs:
         libs = sorted(p for p in bundle.rglob("libavcodec*.so*") if p.is_file())
     if not libs:
+        libs = sorted(p for p in bundle.rglob("avcodec-*.dll") if p.is_file())      # Windows
+    if not libs:
         return
     lib = libs[0]
     lic, conf = _ffmpeg_static(lib)
@@ -295,7 +300,7 @@ def scan_ffmpeg(bundle: Path, components: list, blockers: list, warnings: list) 
         lic = _ffmpeg_query(lib, "avcodec_license")
     if not conf:
         conf = _ffmpeg_query(lib, "avcodec_configuration")
-    m = re.search(r"libavcodec\.so\.(\d+\.\d+\.\d+)", lib.name)
+    m = re.search(r"libavcodec\.so\.(\d+\.\d+\.\d+)", lib.name) or re.search(r"avcodec-(\d+)\.dll", lib.name)
     ver = f"libavcodec {m.group(1)}" if m else ""
     rel = re.search(r"FFmpeg-n?(\d+(?:\.\d+)+)", conf)
     if rel:
@@ -318,7 +323,7 @@ def scan_ffmpeg(bundle: Path, components: list, blockers: list, warnings: list) 
         blockers.append("FFmpeg configuration contains --enable-gpl")
     components.append({
         "name": "FFmpeg", "version": ver, "spdx": spdx, "homepage": "https://ffmpeg.org",
-        "kind": "native-library", "license_files": [], "source": str(lib.relative_to(bundle)),
+        "kind": "native-library", "license_files": [], "source": lib.relative_to(bundle).as_posix(),
         "notes": f"avcodec_license(): {lic or 'n/a'}",
         "configuration": conf,
     })
@@ -328,10 +333,17 @@ def scan_ffmpeg(bundle: Path, components: list, blockers: list, warnings: list) 
 def scan_python(bundle: Path, out: Path, components: list, warnings: list) -> None:
     libpy = sorted(p for p in bundle.rglob("libpython3*.so*") if p.is_file())
     if not libpy:
+        libpy = sorted(p for p in bundle.rglob("python3*.dll") if p.is_file() and p.name.lower() != "python3.dll")
+    if not libpy:
         return
     m = re.search(r"libpython(3\.\d+)", libpy[0].name)
-    ver = m.group(1) if m else ""
-    lic_candidates = [Path(sys.base_prefix) / "lib" / f"python{ver}" / "LICENSE.txt",
+    if not m:
+        mw = re.search(r"python3(\d+)\.dll", libpy[0].name, re.I)           # Windows: python312.dll
+        ver = f"3.{mw.group(1)}" if mw else ""
+    else:
+        ver = m.group(1)
+    lic_candidates = [Path(sys.base_prefix) / "LICENSE.txt",                  # Windows CPython layout
+                      Path(sys.base_prefix) / "lib" / f"python{ver}" / "LICENSE.txt",
                       Path("/usr/lib") / f"python{ver}" / "LICENSE.txt",
                       Path("/usr/share/doc") / f"python{ver}" / "copyright"]
     lic_files = [p for p in lic_candidates if p.is_file()][:1]
@@ -351,7 +363,7 @@ def scan_python(bundle: Path, out: Path, components: list, warnings: list) -> No
         rel.append("cpython/incorporated-software-copyright")
     components.append({
         "name": "CPython", "version": ver, "spdx": "PSF-2.0", "homepage": "https://www.python.org",
-        "kind": "runtime", "license_files": rel, "source": str(libpy[0].relative_to(bundle)),
+        "kind": "runtime", "license_files": rel, "source": libpy[0].relative_to(bundle).as_posix(),
         "notes": "Includes code under other licenses (e.g. libmpdec BSD-2-Clause, HACL* MIT); "
                  "see incorporated-software-copyright when present.",
     })
@@ -385,6 +397,10 @@ EMBEDDED = [
      "CC0-1.0", "https://keccak.team", [],
      "Statically linked in Qt Core; released to the public domain (CC0) by its authors."),
 ]
+# Windows bundles: same components, Windows file names (only one of the two sets matches a bundle).
+EMBEDDED += [(n, g.replace("imageformats/libq", "imageformats/q").replace(".so*", ".dll").replace(".so", ".dll")
+              .replace("libQt6", "Qt6"), sig, spdx, home, docs, note)
+             for n, g, sig, spdx, home, docs, note in EMBEDDED]
 
 
 def _version_or_blank(m: re.Match) -> str:
@@ -400,7 +416,7 @@ def scan_embedded(bundle: Path, out: Path, components: list, warnings: list) -> 
                 continue
             m = re.search(sig, p.read_bytes())
             if m:
-                hits.append(str(p.relative_to(bundle)))
+                hits.append(p.relative_to(bundle).as_posix())
                 ver = ver or _version_or_blank(m)
         if not hits:
             continue
@@ -444,6 +460,25 @@ def scan_icu(bundle: Path, out: Path, components: list, warnings: list) -> None:
         "license_files": rel, "source": str(libs[0].relative_to(bundle)),
         "notes": "Shared libraries used by Qt Core. Also contains double-conversion (BSD-3-Clause)."
                  + (f" License text from the Ubuntu package {src.parent.name}." if rel else ""),
+    })
+
+
+MSVC_RUNTIME_RE = re.compile(r"^(msvcp140(_\d+|_codecvt_ids)?|vcruntime140(_\d+)?|concrt140|vcomp140|vcamp140|vccorlib140)\.dll$", re.I)
+
+
+def scan_msvc_runtime(bundle: Path, out: Path, components: list, warnings: list) -> None:
+    """Windows bundles: the Microsoft Visual C++ runtime DLLs that ship inside the PySide6/shiboken6
+    wheels. Redistributable under the Visual Studio license terms (Distributable Code list)."""
+    dlls = sorted({p.name for p in bundle.rglob("*.dll") if MSVC_RUNTIME_RE.match(p.name)}, key=str.lower)
+    if not dlls:
+        return
+    components.append({
+        "name": "Microsoft Visual C++ Runtime", "version": "14.x", "spdx": "LicenseRef-MSVC-Redistributable",
+        "homepage": "https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files",
+        "kind": "native-library", "license_files": [], "source": ", ".join(dlls),
+        "notes": "Shipped unmodified, as included in the PySide6/shiboken6 wheels from PyPI. Distributable "
+                 "Code under the Microsoft Visual Studio license terms; Microsoft's license is not "
+                 "included in the wheels — see the homepage link.",
     })
 
 
@@ -517,6 +552,7 @@ def main(argv=None) -> int:
     scan_python(bundle, out, components, warnings)
     scan_pyinstaller(bundle, out, components, warnings)
     scan_icu(bundle, out, components, warnings)
+    scan_msvc_runtime(bundle, out, components, warnings)
     scan_embedded(bundle, out, components, warnings)
     add_standard_texts(out, components, warnings)
     if any(c["name"].lower().startswith(("pyside6", "shiboken6", "qt 6")) for c in components):

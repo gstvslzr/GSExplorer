@@ -17,8 +17,14 @@ import sys
 
 from PySide6.QtCore import QMimeDatabase
 
+from . import winplat
+from .winplat import IS_WIN
+
 
 def _spawn(args: list[str], cwd: str | None = None, extra_env: dict | None = None) -> None:
+    if IS_WIN:
+        winplat.spawn(args, cwd=cwd, extra_env=extra_env)
+        return
     # Strip PyInstaller's bundled-library path so launched apps use system libs.
     env = dict(os.environ)
     env.update(extra_env or {})
@@ -36,6 +42,9 @@ def _spawn(args: list[str], cwd: str | None = None, extra_env: dict | None = Non
 
 
 def open_default(path: str) -> None:
+    if IS_WIN:
+        winplat.open_default(path)
+        return
     exe = shutil.which("xdg-open")
     if not exe:
         raise OSError("xdg-open not found (install xdg-utils)")
@@ -80,6 +89,8 @@ def _app_dirs() -> list[str]:
 
 
 def list_apps() -> list[DesktopApp]:
+    if IS_WIN:
+        return []      # Windows: "Open With" uses Windows' own app chooser (see dialogs.OpenWithDialog)
     seen: dict[str, DesktopApp] = {}
     for d in _app_dirs():
         for root, _dirs, files in os.walk(d):
@@ -127,6 +138,13 @@ def launch_app(app: DesktopApp, paths: list[str], terminal_cmd: str = "") -> Non
 
 def launch_command_line(cmdline: str, paths: list[str]) -> None:
     """User-entered 'Open with' command; %f/%F are replaced, else paths are appended."""
+    if IS_WIN:
+        parts = [p.strip('"') for p in shlex.split(cmdline, posix=False)]
+        used = any(p in ("%f", "%F", "%u", "%U") for p in parts)
+        cmd = [x for p in parts for x in ((paths[:1] if p in ("%f", "%u") else paths)
+                                            if p in ("%f", "%F", "%u", "%U") else [p])]
+        _spawn(cmd if used else cmd + paths, cwd=os.path.dirname(paths[0]) if paths else None)
+        return
     app = DesktopApp("custom", cmdline, cmdline, "", [], False)
     _spawn(app.command(paths), cwd=os.path.dirname(paths[0]) if paths else None)
 
@@ -205,6 +223,8 @@ def terminal_command(directory: str, custom: str = "") -> list[str]:
 
     Custom command (Preferences): '{dir}' is replaced by the folder, e.g. "konsole --workdir {dir}";
     without it, the folder option of a known terminal is added automatically."""
+    if IS_WIN:
+        return winplat.terminal_command(directory, custom)[0]
     if custom.strip():
         parts = shlex.split(custom)
         if parts and shutil.which(parts[0]):
@@ -242,12 +262,18 @@ def _find_terminal(custom: str) -> tuple[list[str], list[str]] | None:
 def open_terminal(directory: str, custom: str = "") -> None:
     """Open a terminal whose shell starts in *directory*: the folder is passed three ways — the
     terminal's own option, the process's current folder, and $PWD."""
+    if IS_WIN:
+        winplat.open_terminal(directory, custom)
+        return
     if not os.path.isdir(directory):
         raise OSError(f"Folder not found: {directory}")
     _spawn(terminal_command(directory, custom), cwd=directory, extra_env={"PWD": directory})
 
 
 def run_in_terminal(command: str, directory: str | None, custom: str = "", keep_open: bool = True) -> None:
+    if IS_WIN:
+        winplat.run_in_terminal(command, directory, keep_open)
+        return
     t = _find_terminal(custom)
     if t is None:
         raise OSError("No terminal emulator found. Set one in Preferences.")
@@ -260,18 +286,23 @@ def run_in_terminal(command: str, directory: str | None, custom: str = "", keep_
 
 
 def run_detached_shell(command: str, directory: str) -> None:
+    if IS_WIN:
+        winplat.run_detached_shell(command, directory)
+        return
     _spawn(["/bin/sh", "-c", command], cwd=directory)
 
 
 def open_editor(path: str, custom: str = "") -> None:
     if custom.strip():
-        parts = shlex.split(custom)
+        parts = shlex.split(custom) if not IS_WIN else [p.strip('"') for p in shlex.split(custom, posix=False)]
         _spawn(parts + [path], cwd=os.path.dirname(path))
     else:
         open_default(path)
 
 
 def pkexec_available() -> bool:
+    if IS_WIN:
+        return False
     return shutil.which("pkexec") is not None
 
 

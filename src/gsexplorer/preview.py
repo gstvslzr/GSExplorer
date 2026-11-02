@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (QFormLayout, QFrame, QHBoxLayout, QLabel, QPlainT
                                QSizePolicy, QSlider, QStackedWidget, QStyle, QToolButton, QVBoxLayout, QWidget)
 
 from . import fsutil, system, thumbs
+from .winplat import IS_WIN, find_tool  # noqa: F401
 
 TEXT_LIMIT = 256 * 1024
 DOC_XML_LIMIT = 8 * 1024 * 1024          # zip-bomb guard for office XML parts
@@ -99,7 +100,7 @@ def office_text(path: str, kind: str, limit: int = 20000) -> str:
 
 
 def pdf_pages(path: str) -> str:
-    exe = shutil.which("pdfinfo")
+    exe = find_tool("pdfinfo")
     if not exe:
         return ""
     try:
@@ -193,8 +194,8 @@ def _choose_audio_backend() -> None:
     """Qt's PipeWire audio backend blocks when no PipeWire daemon is running. Ubuntu desktops
     run PipeWire, but if its socket is missing, fall back to the PulseAudio backend, which fails
     fast (video then plays silently instead of freezing the window)."""
-    if os.environ.get("QT_AUDIO_BACKEND"):
-        return
+    if os.environ.get("QT_AUDIO_BACKEND") or IS_WIN:
+        return                       # Windows: Qt uses WASAPI; nothing to choose
     rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
     remote = os.environ.get("PIPEWIRE_REMOTE", "pipewire-0")
     sock = remote if remote.startswith("/") else os.path.join(rt, remote)
@@ -235,7 +236,7 @@ class MediaView(QWidget):
         self.vlc_btn = QPushButton("Open in VLC")
         self.vlc_btn.setToolTip("Play in VLC media player")
         self.vlc_btn.clicked.connect(self.open_vlc)
-        self.vlc_btn.setVisible(shutil.which("vlc") is not None)
+        self.vlc_btn.setVisible(find_tool("vlc") is not None)
         self.full_btn = QPushButton("Open in Player")
         self.full_btn.setToolTip("Open in GSExplorer+ Player: playlist, fullscreen, speed, tracks")
         self.full_btn.clicked.connect(self._open_player)
@@ -286,7 +287,7 @@ class MediaView(QWidget):
             self.toggle()
 
     def toggle(self) -> None:
-        if self.win.cfg["media_player"] == "vlc" and shutil.which("vlc"):
+        if self.win.cfg["media_player"] == "vlc" and find_tool("vlc"):
             return self.open_vlc()
         if not self.path or not self._ensure_player():
             return
@@ -310,7 +311,7 @@ class MediaView(QWidget):
             self.win.play_media(self.path, start_at=pos)
 
     def open_vlc(self) -> None:
-        exe = shutil.which("vlc")
+        exe = find_tool("vlc")
         if exe and self.path:
             self.stop()
             system._spawn([exe, "--", self.path], cwd=os.path.dirname(self.path))

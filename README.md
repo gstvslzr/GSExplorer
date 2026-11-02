@@ -42,6 +42,16 @@ It does **not** become your default file manager. To make it the default for fol
 `xdg-mime default io.github.gstvslzr.GSExplorer.desktop inode/directory`
 (undo: `xdg-mime default org.gnome.Nautilus.desktop inode/directory`).
 
+### Windows (portable, no installation)
+
+`GSExplorer+_26.8.0_win64.exe` is one self-contained file for 64-bit Windows 10 (1809+) and
+Windows 11: no installer, no registry entries, no administrator rights. Settings go to
+`%APPDATA%\gsexplorer-plus`, or — for a USB stick — into a `gsexplorer-plus-data` folder you
+create next to the .exe. Items you delete go to the Windows Recycle Bin. The .exe is not
+code-signed, so SmartScreen warns on first run; verify the `.sha256` first. Network mounts
+(Connect), drive unmount and PDF/video thumbnails are Linux-only. Details, differences and how it
+is built and tested: [docs/WINDOWS.md](docs/WINDOWS.md).
+
 ### Upgrading from GExplorer (≤ 26.7.0)
 
 `sudo apt install ./gsexplorer-plus_26.8.0_amd64.deb` replaces the old `gexplorer` package.

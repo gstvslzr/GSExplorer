@@ -7,9 +7,11 @@ import os
 import shutil
 import subprocess
 
-from PySide6.QtCore import QMimeDatabase
+from PySide6.QtCore import QFileInfo, QMimeDatabase
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QStyle
+from PySide6.QtWidgets import QApplication, QFileIconProvider, QStyle
+
+from .winplat import IS_WIN
 
 _ICON_DIRS = [os.path.expanduser("~/.local/share/icons"), os.path.expanduser("~/.icons"),
               "/usr/share/icons", "/usr/local/share/icons"]
@@ -71,12 +73,17 @@ class IconCache:
 
     def reload(self) -> None:
         self._by_ext.clear()
+        self._prov = QFileIconProvider() if IS_WIN else None   # Windows: the shell's own type icons
         self.folder = themed(["folder"], QStyle.SP_DirIcon)
         self.folder_link = themed(["folder-link", "inode-symlink", "folder"], QStyle.SP_DirLinkIcon)
         self.file = themed(["text-x-generic", "application-octet-stream"], QStyle.SP_FileIcon)
         self.up = themed(["go-up", "go-parent-folder"], QStyle.SP_FileDialogToParent)
         self.broken = themed(["emblem-unreadable", "dialog-warning"], QStyle.SP_MessageBoxWarning)
         self.exec = themed(["application-x-executable", "application-x-sharedlib"], QStyle.SP_FileIcon)
+        if self._prov is not None:
+            self.folder = self._prov.icon(QFileIconProvider.IconType.Folder)
+            self.file = self._prov.icon(QFileIconProvider.IconType.File)
+            self.exec = self.file
 
     def _mime_for_ext(self, ext: str):
         return self.db.mimeTypeForFile("x." + ext, QMimeDatabase.MatchExtension) if ext else None
@@ -90,6 +97,17 @@ class IconCache:
             return self.folder_link if e.is_link else self.folder
         ext = e.ext
         ic = self._by_ext.get(ext)
+        if ic is None and self._prov is not None:
+            # One shell lookup per extension (cached); .exe/.lnk/.ico show the type icon, not
+            # each file's embedded icon, so large folders stay fast.
+            try:
+                ic = self._prov.icon(QFileInfo(e.path))
+            except Exception:  # noqa: BLE001
+                ic = QIcon()
+            if ic.isNull():
+                ic = self.file
+            self._by_ext[ext] = ic
+            return ic
         if ic is None:
             mt = self._mime_for_ext(ext)
             ic = QIcon()

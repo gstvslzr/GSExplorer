@@ -27,6 +27,8 @@ import gzip
 import lzma
 import os
 import shutil
+
+from .winplat import find_tool
 import stat
 import subprocess
 import tarfile
@@ -56,11 +58,11 @@ class NeedsPassword(ArchiveError):
 def tool(name: str) -> str | None:
     if name == "7z":
         for exe in ("7z", "7zz", "7za"):
-            p = shutil.which(exe)
+            p = find_tool(exe)
             if p:
                 return p
         return None
-    return shutil.which(name)
+    return find_tool(name)
 
 
 # (id, label, extension, needs tool)

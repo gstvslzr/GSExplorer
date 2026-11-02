@@ -386,7 +386,8 @@ class SyncWindow(QDialog):
         self.f_pre = QLineEdit()
         self.f_pre.setPlaceholderText("optional shell command run before the task (non-zero exit aborts)")
         self.f_post = QLineEdit()
-        self.f_post.setPlaceholderText("optional shell command run after the task ($GX_ERRORS = error count)")
+        self.f_post.setPlaceholderText("optional shell command run after the task ("
+                                       + ("%GX_ERRORS%" if os.name == "nt" else "$GX_ERRORS") + " = error count)")
 
         form.addRow("Name:", self.f_name)
         form.addRow("Mode:", self.f_mode)
@@ -1121,6 +1122,9 @@ class SyncWindow(QDialog):
         if self.profile.name == UNSAVED:
             self.sched_lbl.setText("")
             return
+        if os.name == "nt":
+            self.sched_lbl.setText("Schedule with Windows Task Scheduler (see Schedule…)")
+            return
         st = schedule.status(self.profile.name)
         self.sched_lbl.setText(f"Scheduled: {st['calendar']}" if st["installed"] else "Not scheduled")
 
@@ -1129,7 +1133,30 @@ class SyncWindow(QDialog):
             QMessageBox.information(self, APP_NAME, "Save the profile first; the schedule runs the saved version.")
             if not self.save():
                 return
+        if os.name == "nt":
+            self._windows_schedule_help()
+            return
         ScheduleDialog(self, self.profile.name).exec()
+
+    def _windows_schedule_help(self) -> None:
+        """Windows: no systemd timers. Show the headless command to register in Task Scheduler."""
+        import subprocess
+        import sys
+        base = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, "-m", "gsexplorer"]
+        cmd = subprocess.list2cmdline(base + ["--sync", self.profile.name, "--quiet"])
+        box = QMessageBox(QMessageBox.Information, APP_NAME,
+                          "Scheduled runs on Windows use Task Scheduler.\n\n"
+                          "Task Scheduler ▸ Create Basic Task… ▸ choose when ▸ Start a program, and use this "
+                          "command line (Program = the quoted .exe path, Arguments = the rest):\n\n"
+                          f"{cmd}\n\n"
+                          "Exit codes: 0 success, 1 warnings, 2 errors, 3 cancelled. Each run writes a log you "
+                          "can open from this window. Keep the .exe in a fixed folder: moving it breaks the task.",
+                          QMessageBox.Close, self)
+        copy = box.addButton("Copy command", QMessageBox.ActionRole)
+        box.exec()
+        if box.clickedButton() is copy:
+            from PySide6.QtWidgets import QApplication
+            QApplication.clipboard().setText(cmd)
         self._update_schedule_label()
 
 

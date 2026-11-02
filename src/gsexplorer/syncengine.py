@@ -22,7 +22,10 @@ from __future__ import annotations
 
 import datetime as _dt
 import errno
-import fcntl
+try:
+    import fcntl
+except ImportError:          # Windows
+    fcntl = None
 import fnmatch
 import hashlib
 import json
@@ -806,14 +809,22 @@ class _Lock:
     def __enter__(self):
         self.fd = os.open(self.path, os.O_CREAT | os.O_RDWR, 0o600)
         try:
-            fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            if fcntl is not None:
+                fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            else:
+                from .winplat import FileLock
+                FileLock.lock(self.fd)
         except BlockingIOError:
             os.close(self.fd)
             raise PreflightError("Another sync of this folder pair is already running.")
         return self
 
     def __exit__(self, *exc):
-        fcntl.flock(self.fd, fcntl.LOCK_UN)
+        if fcntl is not None:
+            fcntl.flock(self.fd, fcntl.LOCK_UN)
+        else:
+            from .winplat import FileLock
+            FileLock.unlock(self.fd)
         os.close(self.fd)
 
 
@@ -1062,7 +1073,14 @@ def _run_hook(cmd: str, task: Task, ctx: Context, which: str) -> None:
     ctx.op("hook", cmd, which)
     env = dict(os.environ, GX_LEFT=task.left, GX_RIGHT=task.right, GX_TASK=task.name,
                GX_ERRORS=str(len(ctx.errors)))
-    p = subprocess.run(["/bin/sh", "-c", cmd], cwd=task.left if os.path.isdir(task.left) else None,
+    if os.name == "nt":
+        # A string, not a list: list quoting (\") would mangle quotes cmd.exe must see verbatim.
+        # /S /C "…": cmd strips only the outer quotes. Variables are %GX_LEFT% etc.
+        from .winplat import cmd_line
+        shell = cmd_line(cmd, keep_open=False)
+    else:
+        shell = ["/bin/sh", "-c", cmd]
+    p = subprocess.run(shell, cwd=task.left if os.path.isdir(task.left) else None,
                        env=env, capture_output=True, text=True, timeout=3600)
     if p.returncode != 0:
         msg = f"{which}-task command failed (exit {p.returncode}): {(p.stderr or p.stdout).strip()[:300]}"

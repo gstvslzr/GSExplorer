@@ -186,7 +186,8 @@ def keyring_clear(c: Connection) -> None:
 # ----------------------------------------------------------------------------- GVFS mounts
 
 def gvfs_dir() -> str:
-    rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    uid = os.getuid() if hasattr(os, "getuid") else 0      # no GVFS on Windows; path never exists
+    rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{uid}"
     return os.path.join(rt, "gvfs")
 
 

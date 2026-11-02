@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, Q
                                QTabWidget, QToolBar, QToolButton, QVBoxLayout, QWidget)
 
 from . import APP_NAME, RDNN_ID, VERSION, dialogs, fsutil, system, themes, uiicons
+from .winplat import IS_WIN, find_tool  # noqa: F401
 from .config import Config, themes_dir
 from .dirmodel import DirModel, Entry
 from .fileops import JobManager
@@ -91,7 +92,7 @@ class Pane(QFrame):
         i = self.tabs.indexOf(v)
         if i < 0:
             return
-        name = os.path.basename(v.path.rstrip("/")) or "/"
+        name = os.path.basename(v.path.rstrip("/\\")) or (v.path.rstrip("\\") if IS_WIN else "/")
         if v.path == os.path.expanduser("~"):
             name = "Home"
         elif v.is_trash():
@@ -273,7 +274,8 @@ class MainWindow(QMainWindow):
         self.theme_menu.aboutToShow.connect(self._fill_theme_menu)
         theme_btn.setMenu(self.theme_menu)
         tb.addWidget(theme_btn)
-        tb.addAction(self.a_connect)
+        if not IS_WIN:
+            tb.addAction(self.a_connect)       # Connect uses GVFS (Linux); Windows maps shares natively
         tb.addAction(self.a_sync_panes)
         tb.addAction(self.a_queue)
         self.addToolBar(tb)
@@ -382,7 +384,7 @@ class MainWindow(QMainWindow):
         self.a_about = A("&About GSExplorer+", self.about)
         self.a_quit = A("&Quit", self.close, "Ctrl+Q", ["application-exit"])
         self.a_restore = A("&Restore from trash", self.restore_trash)
-        self.a_empty_trash = A("&Empty trash…", self.empty_trash)
+        self.a_empty_trash = A("&Empty Recycle Bin…" if IS_WIN else "&Empty trash…", self.empty_trash)
         self.a_cmdfocus = A("Command line", lambda: self.cmd.setFocus(), "Ctrl+E")
         self.a_player = A("Media &player", lambda: (self.player().show(), self.player().raise_()), "Ctrl+Shift+P")
         self.a_sync = A("&Sync && Backup…", self.open_sync, "Ctrl+Shift+B")
@@ -390,6 +392,9 @@ class MainWindow(QMainWindow):
                          tip="Find duplicate files (Ctrl+Shift+D)")
         self.a_connect = A("Connect to &Server…", lambda: self.connector.connect_dialog(), "Ctrl+K",
                            tip="Connect to a server: SMB, SFTP, FTP, WebDAV, NFS, SSH, RDP, VNC (Ctrl+K)")
+        if IS_WIN:
+            self.a_connect.setEnabled(False)
+            self.a_connect.setVisible(False)
         self.a_sync_panes = A("&Compare && sync panes…", self.sync_panes, "Ctrl+Shift+S",
                               tip="Compare & sync the two pane folders (Ctrl+Shift+S)")
 
@@ -418,9 +423,10 @@ class MainWindow(QMainWindow):
             m.addSeparator() if a is None else m.addAction(a)
         self.bm_menu = m.addMenu("Bookmarks")
         self.bm_menu.aboutToShow.connect(self._fill_bookmarks)
-        self.connect_menu = mb.addMenu("&Connect")
-        self.connect_menu.aboutToShow.connect(lambda: self.connector.fill_menu(self.connect_menu))
-        self.connector.fill_menu(self.connect_menu)
+        if not IS_WIN:
+            self.connect_menu = mb.addMenu("&Connect")
+            self.connect_menu.aboutToShow.connect(lambda: self.connector.fill_menu(self.connect_menu))
+            self.connector.fill_menu(self.connect_menu)
         m = mb.addMenu("&Tools")
         for a in (self.a_search, self.a_sync_panes, self.a_sync, self.a_dupes, self.a_player, None, self.a_queue, self.a_terminal, self.a_cmdfocus, None,
                   self.a_themes_dir):
@@ -618,8 +624,8 @@ class MainWindow(QMainWindow):
             return
         from .mediaplayer import media_kind
         if media_kind(e.path) and self.cfg["media_open"] != "default":
-            if self.cfg["media_open"] == "vlc" and shutil.which("vlc"):
-                system._spawn([shutil.which("vlc"), "--", e.path], cwd=os.path.dirname(e.path))
+            if self.cfg["media_open"] == "vlc" and find_tool("vlc"):
+                system._spawn([find_tool("vlc"), "--", e.path], cwd=os.path.dirname(e.path))
             else:
                 self.play_media(e.path)
             return
@@ -672,6 +678,10 @@ class MainWindow(QMainWindow):
     def open_with(self) -> None:
         sel = [e for e in self.active_view().selected_entries() if not e.is_dir]
         if not sel:
+            return
+        if IS_WIN and len(sel) == 1:
+            from . import winplat
+            winplat.open_with_dialog(sel[0].path)       # Windows' own "Open with" chooser
             return
         if self._apps_cache is None:
             QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -931,6 +941,9 @@ class MainWindow(QMainWindow):
         self.sidebar.rebuild()
 
     def empty_trash(self) -> None:
+        if IS_WIN:
+            self._empty_recycle_bin()
+            return
         root = fsutil.home_trash()
         files = os.path.join(root, "files")
         try:
@@ -955,6 +968,26 @@ class MainWindow(QMainWindow):
                     os.unlink(os.path.join(info, n))
         except OSError:
             pass
+
+    def _empty_recycle_bin(self) -> None:
+        from . import winplat
+        count, size = winplat.recycle_bin_info()
+        if count == 0:
+            self.flash("The Recycle Bin is already empty.")
+            return
+        box = QMessageBox(QMessageBox.Warning, APP_NAME,
+                          f"Permanently delete all {count} items ({fsutil.human_size(size)}) in the Recycle Bin "
+                          f"on every drive?\n\nThis can't be undone.", QMessageBox.Cancel, self)
+        btn = box.addButton("Empty Recycle Bin", QMessageBox.DestructiveRole)
+        box.exec()
+        if box.clickedButton() is not btn:
+            return
+        try:
+            winplat.empty_recycle_bin()
+            self.flash("Recycle Bin emptied.")
+        except OSError as ex:
+            QMessageBox.warning(self, APP_NAME, str(ex))
+        self.sidebar.rebuild()
 
     def unmount(self, mountpoint: str) -> None:
         exe = shutil.which("udisksctl")
@@ -1161,7 +1194,7 @@ class MainWindow(QMainWindow):
         if not sel:
             parent = os.path.dirname(v.path) or "/"
             from .dirmodel import make_entry
-            e = make_entry(parent, os.path.basename(v.path) or "/") if v.path != "/" else None
+            e = make_entry(parent, os.path.basename(v.path) or "/") if not fsutil.is_root(v.path) else None
             if e is None:
                 return
             sel = [e]
@@ -1223,9 +1256,9 @@ class MainWindow(QMainWindow):
                     from .mediaplayer import media_kind
                     if media_kind(e.path):
                         m.addAction("Play in GSExplorer+ Player", lambda: self.play_media(e.path))
-                        if shutil.which("vlc"):
+                        if find_tool("vlc"):
                             m.addAction("Play in VLC", lambda: system._spawn(
-                                [shutil.which("vlc"), "--", e.path], cwd=os.path.dirname(e.path)))
+                                [find_tool("vlc"), "--", e.path], cwd=os.path.dirname(e.path)))
                         m.addAction("Open with default app", lambda: system.open_default(e.path))
                     else:
                         m.addAction("Open", lambda: self.open_entry(view, e))

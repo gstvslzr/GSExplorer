@@ -31,6 +31,7 @@ from PySide6.QtCore import QMimeDatabase, QObject, QRunnable, QSize, Qt, QThread
 from PySide6.QtGui import QImage, QImageReader
 
 from . import VERSION
+from .winplat import IS_WIN, find_tool  # noqa: F401
 
 SIZES = {"normal": 128, "large": 256, "x-large": 512}
 NETWORK_FS = {"nfs", "nfs4", "cifs", "smb3", "smbfs", "fuse.sshfs", "fuse.rclone", "fuse.gvfsd-fuse",
@@ -105,6 +106,8 @@ def _thumbnailer_dirs() -> list[str]:
 
 
 def load_thumbnailers() -> dict[str, _Thumbnailer]:
+    if IS_WIN:
+        return {}     # Windows: no sandbox for external converters, so images (Qt, in-process) only
     by_mime: dict[str, _Thumbnailer] = {}
     for d in _thumbnailer_dirs():
         try:
@@ -184,6 +187,8 @@ def _read_image_scaled(path: str, px: int) -> QImage | None:
 
 
 def _builtin_command(mime: str, src: str, out: str, px: int) -> list[str] | None:
+    if IS_WIN:
+        return None
     if mime == "application/pdf" and shutil.which("pdftoppm"):
         return ["pdftoppm", "-png", "-singlefile", "-f", "1", "-l", "1", "-scale-to", str(px), src, out[:-4]]
     if (mime.startswith("video/") or mime in ("application/x-matroska",)) and shutil.which("ffmpeg"):

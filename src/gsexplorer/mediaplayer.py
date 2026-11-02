@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (QComboBox, QFileDialog, QFrame, QHBoxLayout, QLab
                                QStackedWidget, QStyle, QToolButton, QVBoxLayout, QWidget)
 
 from . import APP_NAME, fsutil, system
+from .winplat import IS_WIN, find_tool  # noqa: F401
 
 SPEEDS = (0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0)
 RESUME_MIN_LEN_MS = 3 * 60 * 1000          # only remember positions in media longer than 3 min
@@ -311,7 +312,7 @@ class PlayerWindow(QMainWindow):
         self.vol.setFocusPolicy(Qt.NoFocus)
         self.vol.setValue(int(self.cfg["player_volume"] if self.cfg["player_volume"] is not None else 80))
         self.b_vlc = self._btn(None, "Play this file in VLC", self.open_vlc, "VLC")
-        self.b_vlc.setVisible(shutil.which("vlc") is not None)
+        self.b_vlc.setVisible(find_tool("vlc") is not None)
         self.b_list = self._btn(QStyle.SP_FileDialogListView, "Show/hide playlist (Ctrl+L)", self.toggle_playlist)
         self.b_full = self._btn(QStyle.SP_TitleBarMaxButton, "Fullscreen (F)", self.toggle_fullscreen)
         for w in (self.b_repeat, self.b_shuffle, self.speed, self.b_tracks, self.b_mute, self.vol, self.b_vlc,
@@ -621,7 +622,7 @@ class PlayerWindow(QMainWindow):
         self.cfg["player_playlist"] = self.side.isVisible()
 
     def open_vlc(self) -> None:
-        exe = shutil.which("vlc")
+        exe = find_tool("vlc")
         p = self.current_path()
         if exe and p:
             pos = self.player.position()

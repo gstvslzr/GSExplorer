@@ -3,11 +3,14 @@
 """Dialogs: transfer, conflict, properties, open-with, queue, viewer, preferences, about."""
 from __future__ import annotations
 
-import grp
 import shutil
 import os
-import pwd
 import stat
+import sys
+
+if sys.platform != "win32":
+    import grp
+    import pwd
 import threading
 import time
 
@@ -19,6 +22,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
                                QScrollArea, QTabWidget, QVBoxLayout, QWidget)
 
 from . import APP_NAME, VERSION, fsutil, system
+from .winplat import IS_WIN, find_tool  # noqa: F401
 from .fileops import CANCEL, OVERWRITE, RENAME, SKIP, Job
 
 
@@ -260,7 +264,10 @@ class PropertiesDialog(QDialog):
                 form.addRow("Error:", QLabel(ex.strerror or str(ex)))
                 st = None
             if st is not None:
-                tabs.addTab(self._perm_tab(e, st), "Permissions")
+                if IS_WIN:
+                    tabs.addTab(self._attr_tab(e, st), "Attributes")
+                else:
+                    tabs.addTab(self._perm_tab(e, st), "Permissions")
         else:
             form.addRow(QLabel(f"<b>{len(entries)} items</b>"))
             form.addRow("Location:", QLabel(fsutil.display_path(os.path.dirname(entries[0].path))))
@@ -307,6 +314,55 @@ class PropertiesDialog(QDialog):
     def done(self, r):
         self._cancel.set()
         super().done(r)
+
+    def _attr_tab(self, e, st) -> QWidget:
+        """Windows: Read-only and Hidden attributes; owner and ACLs are in Windows' own Properties."""
+        from . import winplat
+        w = QWidget()
+        lay = QVBoxLayout(w)
+        attrs = getattr(st, "st_file_attributes", 0)
+        self.ro = QCheckBox("Read-only")
+        self.ro.setChecked(bool(attrs & 0x1))
+        self.hid = QCheckBox("Hidden")
+        self.hid.setChecked(bool(attrs & 0x2))
+        lay.addWidget(self.ro)
+        lay.addWidget(self.hid)
+        if attrs & 0x4:
+            lay.addWidget(_muted("System file"))
+        row = QHBoxLayout()
+        sec = QPushButton("Security && owner (Windows)…")
+        sec.setToolTip("Opens Windows' own Properties sheet, where owner and permissions (ACLs) are set")
+        sec.clicked.connect(lambda: self._win_props(e.path))
+        row.addWidget(sec)
+        row.addStretch(1)
+        apply_btn = QPushButton("Apply")
+        apply_btn.clicked.connect(lambda: self._apply_attrs(e.path))
+        row.addWidget(apply_btn)
+        lay.addLayout(row)
+        lay.addStretch(1)
+        self._winplat = winplat
+        return w
+
+    def _win_props(self, path: str) -> None:
+        try:
+            self._winplat.windows_properties(path)
+        except OSError as ex:
+            QMessageBox.warning(self, APP_NAME, f"Couldn't open Windows Properties: {ex}")
+
+    def _apply_attrs(self, path: str) -> None:
+        import ctypes
+        try:
+            st = os.stat(path)
+            attrs = getattr(st, "st_file_attributes", 0)
+            new = (attrs | 0x1) if self.ro.isChecked() else (attrs & ~0x1)
+            new = (new | 0x2) if self.hid.isChecked() else (new & ~0x2)
+            new &= ~0x80            # FILE_ATTRIBUTE_NORMAL is only valid alone
+            if new == 0:
+                new = 0x80
+            if new != attrs and not ctypes.windll.kernel32.SetFileAttributesW(ctypes.c_wchar_p(path), new):
+                raise ctypes.WinError()
+        except OSError as ex:
+            QMessageBox.warning(self, APP_NAME, f"Couldn't change attributes: {ex.strerror or ex}")
 
     def _perm_tab(self, e, st) -> QWidget:
         w = QWidget()
@@ -829,7 +885,7 @@ class PreferencesDialog(QDialog):
         self.player.addItem("Built-in (preview panel)", "builtin")
         self.player.addItem("VLC media player", "vlc")
         self.player.setCurrentIndex(max(0, self.player.findData(cfg["media_player"])))
-        if not shutil.which("vlc"):
+        if not find_tool("vlc"):
             self.player.setItemText(1, "VLC media player (not installed)")
         self.autoplay = QCheckBox("Start playing media when selected in the preview panel")
         self.autoplay.setChecked(bool(cfg["preview_autoplay"]))
@@ -837,7 +893,7 @@ class PreferencesDialog(QDialog):
         self.media_open = QComboBox()
         self.media_open.addItem("GSExplorer+ Player (built in)", "builtin")
         self.media_open.addItem("Default system app", "default")
-        self.media_open.addItem("VLC" + ("" if shutil.which("vlc") else " (not installed)"), "vlc")
+        self.media_open.addItem("VLC" + ("" if find_tool("vlc") else " (not installed)"), "vlc")
         self.media_open.setCurrentIndex(max(0, self.media_open.findData(cfg["media_open"])))
         form.addRow("Open video/audio with:", self.media_open)
         form.addRow("Preview panel plays with:", self.player)

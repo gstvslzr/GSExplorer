@@ -23,6 +23,8 @@ from PySide6.QtCore import (QAbstractTableModel, QMimeData, QModelIndex, QObject
 from PySide6.QtGui import QIcon, QPalette
 from PySide6.QtWidgets import QApplication
 
+from .winplat import IS_WIN, is_hidden_stat
+from .fsutil import is_root, parent_dir
 from .fsutil import display_name, human_size, perm_string
 from .icons import IconCache
 
@@ -66,6 +68,8 @@ def make_entry(directory: str, name: str, dirent=None) -> Entry | None:
     except OSError:
         return None if dirent is None else e
     e.mode = st.st_mode
+    if IS_WIN and not e.hidden:
+        e.hidden = is_hidden_stat(st)          # Windows "hidden" attribute, as well as dot-names
     e.size = st.st_size
     e.mtime = st.st_mtime
     e.uid = st.st_uid
@@ -200,9 +204,9 @@ class DirModel(QAbstractTableModel):
 
     # ------------------------------------------------------------------ sort / filter
     def _parent_entry(self) -> Entry | None:
-        if not self.path or self.path == "/":
+        if not self.path or is_root(self.path):
             return None
-        e = Entry("..", os.path.dirname(self.path.rstrip("/")) or "/")
+        e = Entry("..", parent_dir(self.path))
         e.is_dir = True
         e.size = -1
         e.parent_link = True

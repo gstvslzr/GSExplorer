@@ -25,7 +25,12 @@ Exit codes for --sync: 0 success, 1 warnings, 2 errors, 3 cancelled."""
 def _cli(argv: list[str]) -> int | None:
     """Handle headless commands before any Qt import. Returns an exit code, or None for GUI."""
     args = argv[1:]
-    if "--selftest" not in args and "--version" not in args and "-v" not in args:
+    from . import winplat
+    winplat.setup_dirs()                    # Windows: %APPDATA% / portable folder (no-op on Linux)
+    winplat.install_subprocess_defaults()
+    if winplat.IS_WIN and _console_requested(args):
+        _attach_console()
+    if not winplat.IS_WIN and "--selftest" not in args and "--version" not in args and "-v" not in args:
         from . import migrate
         for msg in migrate.run():           # one-time GExplorer -> GSExplorer+ migration
             print(f"gsexplorer-plus: {msg}", file=sys.stderr)
@@ -43,6 +48,26 @@ def _cli(argv: list[str]) -> int | None:
         from .syncengine import run_profile_cli
         return run_profile_cli(args[i + 1], dry_run="--dry-run" in args, quiet="--quiet" in args)
     return None
+
+
+def _console_requested(args: list[str]) -> bool:
+    return any(a in args for a in ("--sync", "--list-profiles", "--selftest", "--version", "-v", "--help", "-h"))
+
+
+def _attach_console() -> None:
+    """The Windows .exe is a GUI program (no console window). For command-line use from cmd or
+    PowerShell, attach to the caller's console so --sync JSON, --version and --help are printed."""
+    try:
+        import ctypes
+        if ctypes.windll.kernel32.AttachConsole(-1):          # ATTACH_PARENT_PROCESS
+            for name, mode in (("stdout", "w"), ("stderr", "w")):
+                if getattr(sys, name) is None or not getattr(sys, name).isatty():
+                    try:
+                        setattr(sys, name, open("CONOUT$", mode, encoding="utf-8", errors="replace"))
+                    except OSError:
+                        pass
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def _selftest(media: str) -> int:
@@ -91,6 +116,10 @@ def _arg_path(argv: list[str]) -> str | None:
         if a.startswith("-"):
             continue
         if a.startswith("file://"):
+            if os.name == "nt":
+                from urllib.request import url2pathname
+                u = urlparse(a)
+                return url2pathname((("//" + u.netloc) if u.netloc else "") + u.path)
             return os.fsdecode(unquote_to_bytes(urlparse(a).path))
         return os.path.abspath(os.path.expanduser(a))
     return None

@@ -24,6 +24,7 @@ import zipfile
 from dataclasses import asdict, dataclass, field
 
 from . import fsutil
+from .winplat import IS_WIN, find_tool  # noqa: F401
 
 PSEUDO_FS = ("/proc", "/sys", "/dev", "/run")
 BATCH_SECONDS = 0.1
@@ -203,7 +204,7 @@ def _lines_of(path: str, c: Criteria, check):
             return None
         return iter(txt.splitlines())
     if c.in_documents and ext == "pdf":
-        exe = shutil.which("pdftotext")
+        exe = find_tool("pdftotext")
         if not exe:
             return None
         try:
@@ -440,9 +441,10 @@ def _walk(c, s, test_entry, scan_archive, excluded, check, report):
             except OSError as e:
                 s.errors.append(f"{fsutil.display_path(d)}: {e.strerror or e}")
                 continue
-            if (dst.st_dev, dst.st_ino) in seen:
-                continue
-            seen.add((dst.st_dev, dst.st_ino))
+            if dst.st_ino:                     # 0 = this file system has no folder IDs: can't dedupe
+                if (dst.st_dev, dst.st_ino) in seen:
+                    continue
+                seen.add((dst.st_dev, dst.st_ino))
             s.folders += 1
             report(d)
             try:

@@ -14,6 +14,8 @@ import os
 import stat
 from urllib.parse import quote, unquote_to_bytes
 
+from .winplat import IS_WIN
+
 
 # --------------------------------------------------------------------------- display
 
@@ -64,6 +66,20 @@ def unique_name(directory: str, name: str) -> str:
         i += 1
 
 
+def is_root(path: str) -> bool:
+    """True for a filesystem root: "/" on Linux, "C:\\" or "\\\\server\\share\\" on Windows."""
+    if not path:
+        return True
+    p = os.path.abspath(path)
+    return os.path.dirname(p) == p
+
+
+def parent_dir(path: str) -> str:
+    """Parent folder; a root is its own parent."""
+    p = os.path.abspath(path)
+    return os.path.dirname(p.rstrip("/\\") if not is_root(p) else p) or p
+
+
 def is_inside(child: str, parent: str) -> bool:
     child = os.path.realpath(child)
     parent = os.path.realpath(parent)
@@ -78,6 +94,14 @@ def validate_new_name(name: str) -> str | None:
         return "That name is reserved."
     if "/" in name or "\0" in name:
         return "Names can't contain “/”."
+    if IS_WIN:
+        from .winplat import name_error
+        err = name_error(name)
+        if err:
+            return err
+        if len(name) > 255:
+            return "That name is too long (255 characters max)."
+        return None
     if len(os.fsencode(name)) > 255:
         return "That name is too long (255 bytes max)."
     return None
@@ -96,7 +120,11 @@ def _xdg_data_home() -> str:
 
 
 def home_trash() -> str:
+    # On Windows this folder is never created; items go to the Windows Recycle Bin instead.
     return os.path.join(_xdg_data_home(), "Trash")
+
+
+RECYCLE_BIN = "recycle-bin:"     # pseudo-path the sidebar uses for the Windows Recycle Bin
 
 
 def _mount_point(path: str) -> str:
@@ -118,7 +146,7 @@ def _ensure_dirs(trash_dir: str) -> None:
 
 def _topdir_trash(topdir: str) -> tuple[str, bool]:
     """Return (trash_dir, uses_relative_paths) for a non-home mount, creating if needed."""
-    uid = os.getuid()
+    uid = os.getuid()  # Linux only: on Windows move_to_trash() uses the Recycle Bin before reaching here
     admin = os.path.join(topdir, ".Trash")
     try:
         st = os.lstat(admin)
@@ -156,10 +184,20 @@ def trash_dir_for(path: str) -> tuple[str, bool, str]:
 
 
 def move_to_trash(path: str) -> str:
-    """Move *path* to the appropriate trash. Returns the trashed location."""
+    """Move *path* to the appropriate trash. Returns the trashed location.
+
+    Windows: the Windows Recycle Bin (restore from Windows' own Recycle Bin window); Windows asks
+    before anything would be destroyed instead of recycled. Returns RECYCLE_BIN there."""
     path = os.path.abspath(path)
     if not os.path.lexists(path):
         raise FileNotFoundError(errno.ENOENT, "No such file", path)
+    if IS_WIN:
+        from .winplat import recycle
+        try:
+            recycle(path)
+        except OSError as e:
+            raise TrashError(e.errno or errno.EIO, e.strerror or str(e), path) from e
+        return RECYCLE_BIN
     trash, relative, topdir = trash_dir_for(path)
     files_dir = os.path.join(trash, "files")
     info_dir = os.path.join(trash, "info")
@@ -238,6 +276,8 @@ def restore_from_trash(trash_dir: str, name: str) -> str:
 
 def is_trash_files_dir(path: str) -> str | None:
     """If *path* is a trash 'files' directory, return the trash root."""
+    if IS_WIN:
+        return None              # Windows: the Recycle Bin is browsed in Windows' own window
     p = os.path.abspath(path)
     if os.path.basename(p) == "files" and os.path.isdir(os.path.join(os.path.dirname(p), "info")):
         root = os.path.dirname(p)

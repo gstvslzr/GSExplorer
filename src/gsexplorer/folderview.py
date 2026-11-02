@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QFrame, QHBoxLayout, QLabel, Q
                                QWidget, QHeaderView, QStyle)
 
 from .dirmodel import DirModel, Entry
-from .fsutil import display_path, human_size, is_trash_files_dir
+from .fsutil import display_path, human_size, is_root, is_trash_files_dir, parent_dir
 from .icons import themed
 from .widgets import Breadcrumb
 
@@ -203,7 +203,7 @@ class FolderView(QWidget):
             select = path
             path = os.path.dirname(path)
         orig = path
-        while not os.path.isdir(path) and path != "/":
+        while not os.path.isdir(path) and not is_root(path):
             path = os.path.dirname(path)
         if path != orig:
             self.win.flash(f"“{display_path(orig)}” doesn't exist; opened the nearest folder.")
@@ -240,14 +240,14 @@ class FolderView(QWidget):
             self.navigate(self.fwd_stack.pop(), add_history=False)
 
     def go_up(self) -> None:
-        if self.path != "/":
-            self.navigate(os.path.dirname(self.path))
+        if not is_root(self.path):
+            self.navigate(parent_dir(self.path))
 
     def refresh(self) -> None:
         self.model.refresh()
 
     def _update_nav(self) -> None:
-        self.crumb.set_nav_state(bool(self.back_stack), bool(self.fwd_stack), self.path != "/")
+        self.crumb.set_nav_state(bool(self.back_stack), bool(self.fwd_stack), not is_root(self.path))
 
     # ------------------------------------------------------------------ selection
     def selected_entries(self, use_current: bool = True) -> list[Entry]:
