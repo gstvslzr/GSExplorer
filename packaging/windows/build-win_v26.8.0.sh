@@ -65,6 +65,17 @@ if [ ! -x "$B/winpy/python/python.exe" ] || [ ! -f "$B/.toolchain-ok" ]; then
 fi
 wpy -c "import PySide6, PyInstaller; print('    PySide6', PySide6.__version__, '/ PyInstaller', PyInstaller.__version__)"
 
+# GPL-only Qt modules (Qt Virtual Keyboard, Charts, Data Visualization) must not ship. PyInstaller's
+# PySide6 hook collects every platform-input-context plugin, and the virtual-keyboard plugin pulls
+# in Qt6VirtualKeyboard.dll. Remove these files from the build-only Python (the Linux build does the
+# same in prune_bundle.py); collect_licenses.py below still fails the build if any slips through.
+log "Removing GPL-only Qt modules from the build environment"
+PYS="$B/winpy/python/Lib/site-packages/PySide6"
+find "$PYS" -maxdepth 3 \( -iname "Qt6VirtualKeyboard*" -o -iname "qtvirtualkeyboard*" \
+     -o -iname "Qt6Charts*" -o -iname "QtCharts.pyd" -o -iname "QtCharts.pyi" \
+     -o -iname "Qt6DataVisualization*" -o -iname "QtDataVisualization.pyd" -o -iname "QtDataVisualization.pyi" \) \
+     -print -exec rm -rf {} + | sed "s#^$PYS/#    removed #"
+
 # ---------------------------------------------------------------- 2. tests (optional)
 if [ "${1:-}" = "--test" ]; then
     log "Windows test suite (offscreen)"
