@@ -94,6 +94,12 @@ jobs, Sync & Backup mirror/two-way/snapshots/lock/pre-post commands/headless CLI
 path-escape attempts, Find Files, Find Duplicates, and the main window at `C:\`). The Linux suites
 are unchanged and still pass.
 
+**Native window not exercised.** Qt's Windows platform plugin (`qwindows.dll`) calls the Windows
+Color System API (`mscms.dll` `WcsCreateIccProfile`) at start-up; Wine 9.0 does not implement it
+and aborts, so the GUI was tested with Qt's `offscreen` platform (the 68 checks above, including
+the main window at `C:\`) and the real .exe with `--selftest`, `--version` and `--sync`. The first
+launch with a real window happens on Windows.
+
 **Verified under Wine 9.0, not on a physical Windows machine.** Wine reproduces the Win32 APIs used
 here (SHFileOperation, SHEmptyRecycleBin, GetDriveType, hard links, msvcrt locking), but real
 Windows-only behaviour — Explorer's Recycle Bin window, Windows Terminal, the Open With chooser,
